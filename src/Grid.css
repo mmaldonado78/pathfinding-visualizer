@@ -1,0 +1,8 @@
+rect {
+    box-sizing: border-box;
+}
+
+
+Paper {
+    overflow: visible !important;
+}
