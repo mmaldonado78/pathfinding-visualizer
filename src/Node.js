@@ -77,9 +77,9 @@ class Node extends React.Component {
         else if (this.props.node.type === 'goal') fill = this.GOAL;
         else if (this.props.node.type === 'obstacle') fill = this.OBSTACLE;
 
-        if (this.props.node.hovering) fill = LightenDarkenColor(fill, -20);
-        else if (this.props.node.dragged) fill = LightenDarkenColor(fill, 40);
         // console.log(fill);
+        if (this.props.node.dragged) fill = LightenDarkenColor(fill, 40);
+        else if (this.props.node.hovering) fill = LightenDarkenColor(fill, -20);
 
         const draggable = ['start', 'obstacle','goal'].includes(this.props.node.type);
         const changeAnimation = Raphael.animation({

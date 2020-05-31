@@ -1,13 +1,18 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
+import { Provider } from 'react-redux'
 import './index.css';
 import App from './App';
 import * as serviceWorker from './serviceWorker';
 
+// TODO: Create store
+
 ReactDOM.render(
   <React.StrictMode>
       <script>if(!(window.Promise&&[].includes&&Object.assign&&window.Map)){document.write('<script src="https://polyfill.io/v3/polyfill.min.js?features=Array.prototype.flatMap%2CArray.prototype.includes%2Cdefault%2CArray.prototype.flat\n"></scr'+'ipt>')}</script>
-      <App />
+      <Provider>
+        <App />
+      </Provider>
   </React.StrictMode>,
   document.getElementById('root')
 );
