@@ -10,9 +10,7 @@ import * as serviceWorker from './serviceWorker';
 ReactDOM.render(
   <React.StrictMode>
       <script>if(!(window.Promise&&[].includes&&Object.assign&&window.Map)){document.write('<script src="https://polyfill.io/v3/polyfill.min.js?features=Array.prototype.flatMap%2CArray.prototype.includes%2Cdefault%2CArray.prototype.flat\n"></scr'+'ipt>')}</script>
-      <Provider>
         <App />
-      </Provider>
   </React.StrictMode>,
   document.getElementById('root')
 );

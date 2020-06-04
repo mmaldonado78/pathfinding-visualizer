@@ -1,13 +1,25 @@
-import React, {useEffect} from 'react';
-// const {Raphael, Paper, Rect} = require('react-raphael');
-import {Raphael, Set, Paper, Rect} from 'react-raphael';
+import React from 'react';
 import Node from "./Node.js"
+import {NORMAL, START, GOAL, OBSTACLE} from "./constants/NodeTypes";
+
 const clone =  require('rfdc')();
 
 
 class Grid extends React.Component {
 
     NODESIZE = 30;
+
+    // ===============================
+    // ===============================
+    // =========== DEBUG =============
+
+    LOG_MOUSEOVER = false;
+    LOG_MOUSEDOWN = true;
+    LOG_MOUSEMOVE = false;
+    LOG_MOUSEOUT = false;
+    LOG_MOUSEUP = false;
+
+    // ================================
 
 
     constructor(props) {
@@ -23,12 +35,25 @@ class Grid extends React.Component {
             changingStart: false,
             changingGoal: false,
             addingObstacle: false,
+
+            // type of node that was clicked
             selectedType: null,
-            selected: null
+            selected: null,
+
+            // what normal nodes should change into
+            selectedEntity: OBSTACLE,
+
+            // node currently hovered over
+            hovered: null
         };
 
         console.log(this.state.layout);
         this.hovEnevents = 0;
+
+        // this.handleMouseDown = this.handleMouseDown.bind(this);
+        this.handleMouseMove = this.handleMouseMove.bind(this);
+        this.boundMouseDowns = {};
+        this.boundMouseUps = {};
 
 
     }
@@ -38,41 +63,50 @@ class Grid extends React.Component {
     }
 
 
-    shouldComponentUpdate(nextProps, nextState, nextContext) {
-        console.log("Grid update: " + (this.state.layout !== nextState.layout).toString());
-        console.log(this.state);
-        return (this.state.layout !== nextProps.layout);
-    }
+    // shouldComponentUpdate(nextProps, nextState, nextContext) {
+        // console.log("Grid update: " + (this.state.layout !== nextState.layout).toString());
+        // console.log(this.state);
+        // return (this.state.layout !== nextProps.layout);
+    // }
 
-    renderNode(i, j) {
-        const node = this.state.layout[i][j];
+    renderNode(ind) {
+        const node = this.state.layout[ind];
+        // console.log(node);
+
+        if (!this.boundMouseDowns[ind]) {
+            this.boundMouseDowns[ind] = this.handleMouseDown.bind(this, ind);
+        }
+
+        if (!this.boundMouseUps[ind]) {
+            this.boundMouseUps[ind] = this.handleMouseUp.bind(this, ind);
+        }
+
         return(
-            <Node key={node.ox.toString() + node.oy.toString()} node={node} size={this.NODESIZE}
-                  // onHover={this.handleHoverIn.bind(this, i, j)}
-                  // onHoverOut={this.handleHoverOut.bind(this, i, j)}
-                  // onDragStart={this.handleDragStart.bind(this, i, j)}
-                  // onDrag={this.handleDrag.bind(this, i, j,)}
-                  // onDragEnd={this.handleDragEnd.bind(i, j)}
-                onMouseMove={this.handleMouseMove.bind(this, i, j)}
-                onMouseOver={this.handleMouseOver.bind(this, i, j)}
-                onMouseOut={this.handleMouseOut.bind(this, i, j)}
-                onMouseDown={this.handleMouseDown.bind(this, i, j)}
-                onMouseUp={this.handleMouseUp.bind(this, i, j)}
-                addOrRemoveObstacles={this.handleClick.bind(this, i, j)}
+            <Node
+                key={node.ox.toString() + node.oy.toString()}
+                // node={node}
+                size={this.NODESIZE}
+                x={node.x}
+                y={node.y}
+                type={node.type}
+
+                onMouseMove={this.handleMouseMove}
+                onMouseDown={this.boundMouseDowns[ind]}
+                onMouseUp={this.boundMouseUps[ind]}
             />
         );
     }
 
 
-
+    // TODO: Give default grid as prop
     setup() {
         console.log("Setup");
 
         for (let row = 0; row < this.props.rows; row++) {
-            let currRow = [];
-            let type = 'normal';
+            // let currRow = [];
+            let type = NORMAL;
             for (let node = 0; node < this.props.cols; node++) {
-                currRow.push({
+                this.layout.push({
                     x: node * this.NODESIZE,
                     y: row * this.NODESIZE,
                     ox: node * this.NODESIZE,
@@ -82,163 +116,101 @@ class Grid extends React.Component {
                     dragged: false
                         });
             }
-            this.layout.push(currRow)
         }
         let [i, j]  = this.startNode;
-        this.layout[i][j].type = 'start';
+        let start = this.flattenCoords(i, j);
+        this.layout[start].type = START;
 
         [i, j] = this.goalNode;
-        this.layout[i][j].type = 'goal';
+        let goal = this.flattenCoords(i, j);
+        this.layout[goal].type = GOAL;
         console.log(this.layout)
     }
 
-                    // for (let item of row)
-                // });
-            // });
-        // });
-        // console.log(this.layout)
-
-    handleHoverIn(i, j) {
-
-        // this.hovEnevents++;
-        // console.log(this.hovEnevents);
-
-        // console.log("hovering?");
-        console.log("Hover in");
-        // console.log(this.items)
-        let layout = clone(this.state.layout);
-        layout[i][j].hovering = true;
-        // console.log("Testing immutability: " + (Object.is(layout, this.state.layout)).toString());
-
-        this.setState({layout: layout});
+    flattenCoords(i, j) {
+        return this.props.cols * i + j;
     }
 
-    handleHoverOut(i, j) {
+    handleMouseDown(ind, ev) {
 
-        // this.hovEnevents++;
-        // console.log(this.hovEnevents);
-        // if (this.state.changingStart) return;
+        if (this.LOG_MOUSEDOWN) {
+            console.log("Mousedown");
+            console.log(arguments);
+        }
+        console.log(ev.clientX, ev.clientY);
+        console.log(document.elementFromPoint(ev.clientX, ev.clientY));
 
-        console.log("hovering out");
-        // console.log("Hover event");
-        // console.log(this.items)
-        let layout = clone(this.state.layout);
-        layout[i][j].hovering = false;
-        // console.log("Testing immutability: " + (Object.is(layout, this.state.layout)).toString());
+        // ev.preventDefault();
 
-        this.setState({layout: layout});
-    }
+        let layout = this.state.layout.slice();
 
-    handleMouseDown(i, j, ev) {
-        // layout = clone(this.)
-        console.log("Mousedown");
-        console.log(arguments);
-        ev.preventDefault();
+        const selectedType = layout[ind].type;
 
-        let layout = clone(this.state.layout);
-
-        let selectedType = layout[i][j].type;
-        if (selectedType === 'normal') return;
-
-        layout[i][j].dragged = true;
+        // TODO: Add changes for weighted nodes and erasing
+        if (selectedType === NORMAL) {
+            layout[ind] = Object.assign({}, layout[ind], {type: this.state.selectedEntity})
+        }
+        // else { // Temporary: prevents changed node from instantly being draggable
+        //     layout[this.state.hovered] = Object.assign({}, layout[this.state.hovered], {dragged: true});
+        // }
 
          this.setState({
              layout: layout,
              selectedType: selectedType,
-             selected: [i, j]
-         })
-
-
-        // let layout = clone(this.state.layout);
-        // let dragged = layout[i][j];
-        // dragged.hovering = false;
-        // dragged.x
-        // this.setState({changingStart: true});
+             selected: 0
+         });
     }
 
-    handleDrag(i, j, movX, movY, x, y, ev) {
-
-        console.log("Drag");
-        // console.log(arguments);
-        // let coords;
-
-        // if (this.state.addingObstacle) coords = this.state.obstacleCoords;
-        // else if (this.state.changingStart) coords = this.startNode;
-        // else if (this.state.changingGoal) coords = this.goalNode;
-
-        let i0, j0;
-        [i0, j0] = this.state.coords;
-
-        if (i !== i0 && j !== j0) {
-            let layout = clone(this.state.layout);
-
-
-            layout[i][j].type = this.state.selectedType;
-            layout[i0][j0].type = 'normal';
-
-            this.setState({layout: layout})
+    handleMouseOver(ind, ev) {
+        if (this.LOG_MOUSEOVER) {
+            ev.persist();
+            console.log("Mouseover");
+            console.log(arguments);
         }
 
-        // console.log(ev);
-    }
 
-    handleDragEnd(i, j, ev) {
-        console.log("Dragend");
-        console.log(arguments)
-
-    }
-
-    handleMouseOver(i, j) {
-        console.log("Mouseover");
-        console.log(arguments);
-
-        // if (this.state.selectedType && (i === this.state.selected[0] &&
-        //     j === this.state.selected[1])) {
-        //
-        //     // if (i === this.state.selected[0] &&
-        //     //     j === this.state.selected[1]) return;
-        //
-        //     let layout = clone(this.state.layout);
-        //     layout[i][j].type = this.state.selectedType;
-        //     this.setState({layout: layout});
+        // if (!this.state.selectedType) {
         // }
-        // else {
-        if (!this.state.selectedType) {
-            this.handleHoverIn(i, j)
-        }
+        // this.updateNodeType();
+        // this.handleHoverIn(ind);
+        let newType = this.updateNodeType(ind);
+
+        let layout = this.state.layout.slice();
+        layout[ind] = Object.assign({}, layout[ind], {hovering: true, type: newType});
+        this.setState({hovered: ind, layout: layout});
+
+
     }
 
-    handleMouseOut(i, j) {
-        console.log("Mouseout");
-        console.log(arguments);
-
-        // if (this.state.selectedType && (i === this.state.selected[0] &&
-        //         j === this.state.selected[1])){
-        //
-        //
-        //     let layout = clone(this.state.layout);
-        //     layout[i][j].type = 'normal';
-        //     this.setState({layout: layout});
-        // }
-        if (!this.state.selectedType) {
-            this.handleHoverOut(i, j)
+    handleMouseOut(ind, ev) {
+        if (this.LOG_MOUSEOUT) {
+            ev.persist();
+            console.log("Mouseout");
+            console.log(arguments);
         }
+
+        const currentType = this.state.layout[ind].type;
+        const newType = (this.state.selectedType === currentType) ? 'normal' : currentType;
+
+        let layout = this.state.layout.slice();
+        layout[ind] = Object.assign({}, layout[ind], {hovering: false, type: newType});
+        this.setState({layout: layout});
+
+        console.log(`\tUpdating on hover out - Current type: ${currentType}, updated type: ${newType}`);
+
+
     }
 
-    handleMouseUp(i, j, ev) {
-        console.log("Mouseup");
-        console.log(arguments);
+    handleMouseUp(ind, ev) {
+        if (this.LOG_MOUSEUP) {
+            console.log("Mouseup");
+            console.log(arguments);
+        }
         const selectedType = this.state.selectedType;
 
-        let row, col;
         if (selectedType) {
-            [row, col] = this.state.selected;
-            let layout  = clone(this.state.layout);
-            layout[row][col].dragged = false;
-
 
             this.setState({
-                layout: layout,
                 selectedType: null,
                 selected: null
             });
@@ -248,113 +220,94 @@ class Grid extends React.Component {
     }
 
     //TODO: Add mousemove handler for paper instead of each square
-    handleMouseMove(i, j, ev, x, y) {
-        // console.log("Mousemove");
-        // console.log(arguments);
+    handleMouseMove(ev) {
+
+        if (this.LOG_MOUSEMOVE) {
+            console.log("Mousemove");
+            ev.persist();
+            console.log(arguments);
+        }
         if (!this.state.selectedType) return;
 
-        let layout = clone(this.state.layout);
-        let row, col;
-        [row, col] = this.state.selected;
-        layout[row][col].x = ev.clientX - 10;
-        layout[row][col].y = ev.clientY - 10;
+        if (this.state.selectedType === 'normal') {
+            // TODO: drag and make selectedEntity type nodes
+            return
+        }
 
-        this.setState({layout: layout})
+
+        // ====================================================
+        // ====== Drag selected node ============================
+
+        // let layout = this.state.layout.slice();
+        // let selected = this.state.selected;
+        // layout[selected] = Object.assign({}, layout[selected],
+        //     {
+        //         x: ev.clientX - 10,
+        //         y: ev.clientY - 10
+        //     });
+        //
+        // this.setState({layout: layout});
+
+        // =========================================================
 
     }
 
-    handleClick(i, j) {
-        console.log("Click");
-        let clicked = this.state.layout[i][j].type;
+    /**
+     * Returns the new type of the node that user hovered over if it should be changed
+     * @returns {string|null}
+     */
+    updateNodeType(ind) {
+        const selectedType = this.state.selectedType;
+        const currNode = this.state.hovered;
+        const currType = this.state.layout[ind].type;
 
-        let layout;
-        if (clicked === 'normal' || clicked === 'obstacle') {
-            layout = clone(this.state.layout);
+        if (selectedType && currType === 'normal') {
+
+            let newType;
+
+            if (selectedType === 'normal') {
+                newType = this.state.selectedEntity;
+            }
+            else {
+                newType = selectedType
+            }
+
+            console.log(`Updating node to type ${newType}`);
+
+            return newType;
         }
 
-        if (clicked === 'normal') {
-            layout[i][j].type = 'obstacle';
-            this.setState({layout: layout});
-        }
-        else if (clicked === 'obstacle') {
-            layout[i][j].type = 'normal';
-            this.setState({layout: layout})
-        }
+        // console.log(`currNode: ${currNode}`);
+        return currType;
+
+
     }
 
     render() {
-        // console.log(this.state.layout.flat());
         let layout = [];
 
-        // if (this.state.selected) {
-        //     console.log("I ran");
-        //     // let layout = [];
-        //     let di, dj;
-        //     [di, dj] = this.state.selected;
-        //     console.log(di, dj);
-        //     this.state.layout.flat().forEach((node, ind) => {
-        //         console.log(ind, di * this.props.cols + dj);
-        //         if (ind !== di * this.props.cols + dj) {
-        //             let j = ind % this.props.cols;
-        //             let i = (ind - j) / this.props.cols;
-        //             layout.push(this.renderNode(i, j))
-        //         }
-        //     });
-        //     layout.push(this.renderNode(di, dj));
-        //     console.log(layout)
-        //
-        // }
-        // else {
-            layout = this.state.layout.flat().map((node, ind) => {
-                let j = ind % this.props.cols;
-                const i = (ind - j)/ this.props.cols;
-                // if (i === 5 && j === 15) return null;
-                return(
-                    this.renderNode(i, j)
+        layout = this.state.layout.map((node, ind) => {
+            return this.renderNode(ind);
+        });
 
-                )
-            });
-
-            // layout = layout.filter(node => node !== null);
-        // }
-
-        // console.log(layout);
-
-        // if (this.state.selected) {
-        //     let di, dj;
-        //     [di, dj] = this.state.selected;
-        //     layout.splice(di * this.props.cols + dj, 1);
-        //     console.log("Redrawing node");
-        //     layout.unshift(dragged[0]);
-            // layout.push(this.renderNode(di, dj))
-        // }
-        // console.log(layout);
        return(
-
-           // <Paper key="paper" width={this.props.cols * this.NODESIZE} height={this.props.rows * this.NODESIZE}>
-           //     {
-           //         layout
-           //     }
-           // </Paper>)
-        <svg
-            // viewBox={`0 0 ${this.props.cols * this.NODESIZE} ${this.props.rows * this.NODESIZE}`}
+        // <div onMouseDown={this.handleMouseDown}>
+          <svg
             width={this.props.cols * this.NODESIZE}
             height={this.props.rows * this.NODESIZE}
-        >
+          >
             <g>
                 {
                     layout
                 }
             </g>
-        </svg>
+          </svg>
+        // </div>
        )
 
 
     }
 }
-
-
-
 
 
 export default Grid
