@@ -1,6 +1,7 @@
 import React from 'react';
 import Node from "./Node.js"
 import {NORMAL, START, GOAL, OBSTACLE} from "./constants/NodeTypes";
+import DraggedNode from "./DraggedNode";
 
 const clone =  require('rfdc')();
 
@@ -27,7 +28,8 @@ class Grid extends React.Component {
         this.startNode = [5, 15];
         this.goalNode = [19, 29];
         this.layout = [];
-        // console.log(this.layout);
+        // this.draggedCoords = [null, null];
+        this.lastChanged = null;
         this.setup();
 
         this.state = {
@@ -44,19 +46,22 @@ class Grid extends React.Component {
             selectedEntity: OBSTACLE,
 
             // node currently hovered over
-            hovered: null
+            hovered: null,
+
+            draggedCoords: [null, null]
         };
 
         console.log(this.state.layout);
-        this.hovEnevents = 0;
 
         // this.handleMouseDown = this.handleMouseDown.bind(this);
         this.handleMouseMove = this.handleMouseMove.bind(this);
         this.boundMouseDowns = {};
         this.boundMouseUps = {};
 
-
+        document.addEventListener('mousemove', this.handleMouseMove);
     }
+
+
 
     componentDidMount() {
         console.log("Grid mounted");
@@ -93,6 +98,21 @@ class Grid extends React.Component {
                 onMouseMove={this.handleMouseMove}
                 onMouseDown={this.boundMouseDowns[ind]}
                 onMouseUp={this.boundMouseUps[ind]}
+            />
+        );
+    }
+
+    renderDraggedNode() {
+
+        console.log(this.state.selectedType !== NORMAL);
+        const [x, y] = this.state.draggedCoords;
+
+        return(
+            <DraggedNode
+                x={x}
+                y={y}
+                size={Math.round(this.NODESIZE / 2)}
+                type={this.state.selectedType}
             />
         );
     }
@@ -140,6 +160,8 @@ class Grid extends React.Component {
         console.log(ev.clientX, ev.clientY);
         console.log(document.elementFromPoint(ev.clientX, ev.clientY));
 
+        // this.state.draggedCoords = [ev.clientX, ev.clientY];
+
         // ev.preventDefault();
 
         let layout = this.state.layout.slice();
@@ -157,7 +179,8 @@ class Grid extends React.Component {
          this.setState({
              layout: layout,
              selectedType: selectedType,
-             selected: 0
+             // selected: 0
+             draggedCoords: [ev.clientX, ev.clientY]
          });
     }
 
@@ -227,12 +250,28 @@ class Grid extends React.Component {
             ev.persist();
             console.log(arguments);
         }
-        if (!this.state.selectedType) return;
+        if (!(this.state.selectedType && this.state.selectedType !== NORMAL)) return;
+
+        const [x, y] = [ev.clientX, ev.clientY];
+
+        // this.draggedCoords = [x, y];
+
+        let layout = this.state.layout;
+        const ind = this.flattenCoords(
+            y % this.NODESIZE,
+            x % this.NODESIZE
+        );
+        const currNode = layout[ind];
+
 
         if (this.state.selectedType === 'normal') {
             // TODO: drag and make selectedEntity type nodes
             return
         }
+
+        this.setState({
+            draggedCoords: [x, y]
+        })
 
 
         // ====================================================
@@ -300,6 +339,9 @@ class Grid extends React.Component {
                 {
                     layout
                 }
+            </g>
+            <g style={{pointerEvents: "none"}}>
+              {this.state.selectedType && this.state.selectedType !== NORMAL && this.renderDraggedNode()}
             </g>
           </svg>
         // </div>
