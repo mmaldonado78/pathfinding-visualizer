@@ -60,12 +60,17 @@ class Node extends React.PureComponent {
 
     render() {
         console.log(`Node ${this.props.x + this.props.y} rendered`);
+        // console.log(`Dragged over: ${this.props.draggedOver}`);
 
 
-        //TODO: Move node types up to Grid and pass as props
         let fill = this.props.type;
 
-        if (this.state.hovering) fill = LightenDarkenColor(fill, -20);
+        if (this.props.selected) {
+            fill = LightenDarkenColor(fill, 50)
+        }
+        if (this.state.hovering || this.props.draggedOver) {
+            fill = LightenDarkenColor(fill, -25);
+        }
 
 
 
@@ -86,14 +91,11 @@ class Node extends React.PureComponent {
                 strokeLinecap={"round"}
                 stroke={"#FFF"}
                 strokeWidth={1}
-                rx={3}
-                ry={3}
+                rx={1}
+                ry={1}
 
-                // onMouseOver={this.props.onMouseOver.bind(this)}
-                // onMouseOut={this.props.onMouseOut.bind(this)}
                 onMouseOver={this.handleHover}
                 onMouseOut={this.handleHover}
-                onMouseUp={this.props.onMouseUp}
                 onMouseDown={this.props.onMouseDown}
                 onMouseMove={this.props.onMouseMove}
             >

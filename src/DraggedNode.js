@@ -8,10 +8,11 @@ class DraggedNode extends React.PureComponent {
 
         let fill = this.props.type;
         fill = LightenDarkenColor(fill, 30);
+        let offset = Math.round(this.props.size / 2);
         return (
             <Node
-                x={this.props.x}
-                y={this.props.y}
+                x={this.props.x - offset}
+                y={this.props.y - offset}
                 size={this.props.size}
                 type={fill}
             />

@@ -15,10 +15,10 @@ class Grid extends React.Component {
     // =========== DEBUG =============
 
     LOG_MOUSEOVER = false;
-    LOG_MOUSEDOWN = true;
+    LOG_MOUSEDOWN = false;
     LOG_MOUSEMOVE = false;
     LOG_MOUSEOUT = false;
-    LOG_MOUSEUP = false;
+    LOG_MOUSEUP = true;
 
     // ================================
 
@@ -55,16 +55,20 @@ class Grid extends React.Component {
 
         // this.handleMouseDown = this.handleMouseDown.bind(this);
         this.handleMouseMove = this.handleMouseMove.bind(this);
+        this.handleMouseUp = this.handleMouseUp.bind(this);
         this.boundMouseDowns = {};
         this.boundMouseUps = {};
+        this.grid = React.createRef();
 
         document.addEventListener('mousemove', this.handleMouseMove);
+        document.addEventListener('mouseup', this.handleMouseUp)
     }
 
 
 
     componentDidMount() {
         console.log("Grid mounted");
+
     }
 
 
@@ -82,9 +86,11 @@ class Grid extends React.Component {
             this.boundMouseDowns[ind] = this.handleMouseDown.bind(this, ind);
         }
 
-        if (!this.boundMouseUps[ind]) {
-            this.boundMouseUps[ind] = this.handleMouseUp.bind(this, ind);
-        }
+        // if (!this.boundMouseUps[ind]) {
+        //     this.boundMouseUps[ind] = this.handleMouseUp.bind(this, ind);
+        // }
+
+        // console.log(`Dragged over condition: ${!!this.state.draggedOver && this.state.draggedOver === ind}`)
 
         return(
             <Node
@@ -94,10 +100,12 @@ class Grid extends React.Component {
                 x={node.x}
                 y={node.y}
                 type={node.type}
+                draggedOver={!!this.state.draggedOver && this.state.draggedOver === ind}
+                selected={!!this.state.selected && this.state.selected === ind}
 
                 onMouseMove={this.handleMouseMove}
                 onMouseDown={this.boundMouseDowns[ind]}
-                onMouseUp={this.boundMouseUps[ind]}
+                // onMouseUp={this.boundMouseUps[ind]}
             />
         );
     }
@@ -157,10 +165,11 @@ class Grid extends React.Component {
             console.log("Mousedown");
             console.log(arguments);
         }
-        console.log(ev.clientX, ev.clientY);
-        console.log(document.elementFromPoint(ev.clientX, ev.clientY));
 
-        // this.state.draggedCoords = [ev.clientX, ev.clientY];
+        let selected = null;
+        // console.log(ev.clientX, ev.clientY);
+        // console.log(document.elementFromPoint(ev.clientX, ev.clientY));
+
 
         // ev.preventDefault();
 
@@ -170,16 +179,16 @@ class Grid extends React.Component {
 
         // TODO: Add changes for weighted nodes and erasing
         if (selectedType === NORMAL) {
-            layout[ind] = Object.assign({}, layout[ind], {type: this.state.selectedEntity})
+            layout[ind] = Object.assign({}, layout[ind], {type: this.state.selectedEntity});
         }
-        // else { // Temporary: prevents changed node from instantly being draggable
-        //     layout[this.state.hovered] = Object.assign({}, layout[this.state.hovered], {dragged: true});
-        // }
+        else {
+            selected = ind;
+        }
 
          this.setState({
              layout: layout,
              selectedType: selectedType,
-             // selected: 0
+             selected: selected,
              draggedCoords: [ev.clientX, ev.clientY]
          });
     }
@@ -224,7 +233,7 @@ class Grid extends React.Component {
 
     }
 
-    handleMouseUp(ind, ev) {
+    handleMouseUp(ev) {
         if (this.LOG_MOUSEUP) {
             console.log("Mouseup");
             console.log(arguments);
@@ -233,9 +242,33 @@ class Grid extends React.Component {
 
         if (selectedType) {
 
+            let layout = this.state.layout.slice();
+            const [x, y] = this.state.draggedCoords;
+
+            let ind = this.flattenCoords(
+                Math.floor(y / this.NODESIZE),
+                Math.floor(x / this.NODESIZE)
+            );
+            console.log(layout[ind]);
+
+            // TODO: Account for selected in Component state possibly being null
+            if (layout[ind].type === NORMAL) {
+                layout[ind] = Object.assign({}, layout[ind],
+                    {
+                        type: selectedType
+                    });
+                layout[this.state.selected] = Object.assign({},
+                    layout[this.state.selected],
+                    {
+                        type: NORMAL
+                    });
+            }
+
             this.setState({
+                layout: layout,
                 selectedType: null,
-                selected: null
+                selected: null,
+                draggedOver: null
             });
         }
 
@@ -245,23 +278,74 @@ class Grid extends React.Component {
     //TODO: Add mousemove handler for paper instead of each square
     handleMouseMove(ev) {
 
-        if (this.LOG_MOUSEMOVE) {
-            console.log("Mousemove");
-            ev.persist();
-            console.log(arguments);
-        }
         if (!(this.state.selectedType && this.state.selectedType !== NORMAL)) return;
 
-        const [x, y] = [ev.clientX, ev.clientY];
+        if (this.LOG_MOUSEMOVE) {
+            console.log("Mousemove");
+            // ev.persist();
+            // console.log(arguments);
+            console.log(`Coords: ${ev.clientX}, ${ev.clientY}`);
+        }
+
+        let newState = {};
+
+        let [x, y] = [ev.clientX, ev.clientY];
 
         // this.draggedCoords = [x, y];
 
-        let layout = this.state.layout;
-        const ind = this.flattenCoords(
-            y % this.NODESIZE,
-            x % this.NODESIZE
-        );
-        const currNode = layout[ind];
+        let gridRect = this.grid.current.getBoundingClientRect();
+        x = x - gridRect.left;
+        y = y - gridRect.top;
+
+        if (x < this.NODESIZE / 2) {
+            x = this.NODESIZE / 2
+        }
+
+        if (y < this.NODESIZE / 2) {
+            y = this.NODESIZE / 2
+        }
+
+        if (x > 900 - this.NODESIZE / 2) {
+            x = 900 - this.NODESIZE / 2
+        }
+
+        if (y > 600 - this.NODESIZE / 2) {
+            y = 600 - this.NODESIZE / 2
+        }
+
+        let row = Math.floor(y / this.NODESIZE);
+        let col = Math.floor(x / this.NODESIZE);
+
+        if (row > this.props.rows - 1) {
+            row = this.props.rows - 1;
+        }
+
+        if (col > this.props.cols - 1) {
+            col = this.props.cols - 1
+        }
+
+        console.log(row, col);
+
+        let draggedOver = null;
+
+
+        if (row === this.props.rows - 1 || row === 0||
+            col === this.props.cols - 1 || col === 0) {
+            draggedOver = this.flattenCoords(row, col);
+        }
+
+        // console.log(document.elementFromPoint(x, y));
+        // let el = document.elementFromPoint(x, y);
+        // el.style.fill = "";
+
+
+
+        // let layout = this.state.layout;
+        // const ind = this.flattenCoords(
+        //     y % this.NODESIZE,
+        //     x % this.NODESIZE
+        // );
+        // const currNode = layout[ind];
 
 
         if (this.state.selectedType === 'normal') {
@@ -269,9 +353,11 @@ class Grid extends React.Component {
             return
         }
 
+
         this.setState({
+            draggedOver: draggedOver,
             draggedCoords: [x, y]
-        })
+        });
 
 
         // ====================================================
@@ -325,15 +411,16 @@ class Grid extends React.Component {
     render() {
         let layout = [];
 
+
         layout = this.state.layout.map((node, ind) => {
             return this.renderNode(ind);
         });
 
        return(
-        // <div onMouseDown={this.handleMouseDown}>
           <svg
             width={this.props.cols * this.NODESIZE}
             height={this.props.rows * this.NODESIZE}
+            ref={this.grid}
           >
             <g>
                 {
@@ -344,7 +431,7 @@ class Grid extends React.Component {
               {this.state.selectedType && this.state.selectedType !== NORMAL && this.renderDraggedNode()}
             </g>
           </svg>
-        // </div>
+
        )
 
 
