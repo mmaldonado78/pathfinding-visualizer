@@ -33,13 +33,16 @@ class Grid extends React.Component {
         this.lastChanged = null;
         this.setup();
 
+        this.addingEntities = false;
+        this.removingEntitues = false;
+
         this.state = {
             layout: clone(this.layout),
             changingStart: false,
             changingGoal: false,
             addingObstacle: false,
 
-            // type of node that was clicked
+            // type of node that was clicked and could possibly be dragged
             selectedType: null,
             selected: null,
 
@@ -58,6 +61,7 @@ class Grid extends React.Component {
         this.handleMouseMove = this.handleMouseMove.bind(this);
         this.handleMouseUp = this.handleMouseUp.bind(this);
         this.handleMouseDown = this.handleMouseDown.bind(this);
+        this.addSelectedEntityAt = this.addSelectedEntityAt.bind(this);
         this.boundMouseDowns = {};
         this.boundMouseUps = {};
         this.grid = React.createRef();
@@ -73,13 +77,12 @@ class Grid extends React.Component {
 
     }
 
-
-    // shouldComponentUpdate(nextProps, nextState, nextContext) {
-        // console.log("Grid update: " + (this.state.layout !== nextState.layout).toString());
-        // console.log(this.state);
-        // return (this.state.layout !== nextProps.layout);
-    // }
-
+    /**
+     * Not in use
+     *
+     * @param ind
+     * @returns {JSX.Element}
+     */
     renderNode(ind) {
         const node = this.state.layout[ind];
         // console.log(node);
@@ -151,11 +154,9 @@ class Grid extends React.Component {
         }
 
         let [i, j]  = this.startNode;
-        // let start = this.flattenCoords(i, j);
         this.layout[i][j].type = START;
 
         [i, j] = this.goalNode;
-        // let goal = this.flattenCoords(i, j);
         this.layout[i][j].type = GOAL;
         console.log(this.layout)
     }
@@ -165,10 +166,6 @@ class Grid extends React.Component {
     }
 
     handleMouseDown(i, j, ev) {
-
-        console.log("Grid 'this'")
-        console.log(this);
-        console.log(arguments);
 
         if (this.LOG_MOUSEDOWN) {
             console.log("Mousedown");
@@ -190,6 +187,7 @@ class Grid extends React.Component {
         if (selectedType === NORMAL) {
             layout[i] = layout[i].slice();
             layout[i][j] = Object.assign({}, layout[i][j], {type: this.state.selectedEntity});
+            this.addingEntities = true;
         }
         else {
             selected = [i, j];
@@ -253,13 +251,7 @@ class Grid extends React.Component {
         if (this.state.selected) {
 
             let layout = this.state.layout.slice();
-            console.log(layout);
             const [x, y] = this.state.draggedCoords;
-
-            // let ind = this.flattenCoords(
-            //     Math.floor(y / this.NODESIZE),
-            //     Math.floor(x / this.NODESIZE)
-            // );
 
             let [i, j] = [
                 Math.floor(y / this.NODESIZE),
@@ -292,6 +284,8 @@ class Grid extends React.Component {
                 draggedOver: null
             });
         }
+
+        this.addingEntities = false;
 
 
     }
@@ -354,7 +348,6 @@ class Grid extends React.Component {
         }
 
 
-        //TODO: Take draggedOver out of if statement?; is if statement necessary?
         if (row === this.props.rows - 1 || row === 0||
             col === this.props.cols - 1 || col === 0) {
 
@@ -378,12 +371,6 @@ class Grid extends React.Component {
         // const currNode = layout[ind];
 
 
-        if (this.state.selectedType === 'normal') {
-            // TODO: drag and make selectedEntity type nodes
-            return
-        }
-
-
         this.setState({
             draggedOver: draggedOver,
             draggedCoords: [x, y]
@@ -405,6 +392,29 @@ class Grid extends React.Component {
 
         // =========================================================
 
+    }
+
+    addSelectedEntityAt(i, j) {
+
+        console.log(this.addingEntities);
+
+        if (!this.addingEntities) return;
+
+        let currNodeType = this.state.layout[i][j].type;
+        console.log(currNodeType);
+
+        if (currNodeType === NORMAL) {
+            let layout = this.state.layout.slice()
+            layout[i] = layout[i].slice()
+
+            layout[i][j] = Object.assign({},
+                layout[i][j],
+                {type: this.state.selectedEntity})
+
+            this.setState({
+                layout: layout
+            })
+        }
     }
 
     /**
@@ -452,6 +462,7 @@ class Grid extends React.Component {
                     onMouseMove={this.handleMouseMove}
                     draggedOver={this.state.draggedOver}
                     selected={this.state.selected}
+                    addSelectedEntity={this.addSelectedEntityAt}
                 />);
         });
 
@@ -476,8 +487,5 @@ class Grid extends React.Component {
 
     }
 }
-
-
-
 
 export default Grid

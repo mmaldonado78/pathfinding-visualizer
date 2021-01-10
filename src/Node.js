@@ -4,11 +4,6 @@ import LightenDarkenColor from  "./lightenDarken.js"
 
 class Node extends React.PureComponent {
 
-    // NORMAL = "#D3D3D3";
-    // OBSTACLE = "#36454F";
-    // START = "#77DD77";
-    // GOAL = "#F54A67";
-
     constructor(props) {
         super(props);
         // this.fill = ;
@@ -19,8 +14,8 @@ class Node extends React.PureComponent {
         };
 
         this.handleHover = this.handleHover.bind(this);
+        this.handleMouseOver = this.handleMouseOver.bind(this);
         this.mouseDown = this.mouseDown.bind(this);
-
     }
 
     componentDidMount() {
@@ -49,6 +44,11 @@ class Node extends React.PureComponent {
             y: y - 10
         })
 
+    }
+
+    handleMouseOver() {
+        this.props.addSelectedEntity(this.props.row, this.props.col);
+        this.handleHover();
     }
 
     handleHover() {
@@ -104,7 +104,7 @@ class Node extends React.PureComponent {
                 rx={1}
                 ry={1}
 
-                onMouseOver={this.handleHover}
+                onMouseOver={this.handleMouseOver}
                 onMouseOut={this.handleHover}
                 onMouseDown={this.mouseDown}
                 // onMouseMove={this.props.onMouseMove}
