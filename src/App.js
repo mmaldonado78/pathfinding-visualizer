@@ -2,6 +2,7 @@ import React from 'react';
 import logo from './logo.svg';
 import './App.css';
 import Grid from './Grid.js'
+import Menu from './Menu.js'
 
 class App extends React.Component {
 
@@ -13,7 +14,12 @@ class App extends React.Component {
     }
   render() {
       return (
-              <Grid rows={this.ROWS} cols={this.COLS} />
+          <div id={"main"}>
+            <Grid rows={this.ROWS} cols={this.COLS} />
+            <Menu/>
+          </div>
+
+
       );
   }
 
