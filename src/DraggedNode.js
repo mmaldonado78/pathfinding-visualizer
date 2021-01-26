@@ -22,6 +22,7 @@ class DraggedNode extends React.PureComponent {
 
     componentWillUnmount() {
         console.log("Will unmount");
+        this.props.clearDraggedCoords();
     }
 }
 

@@ -16,6 +16,7 @@ class Node extends React.PureComponent {
         this.handleHover = this.handleHover.bind(this);
         this.handleMouseOver = this.handleMouseOver.bind(this);
         this.mouseDown = this.mouseDown.bind(this);
+        this.mouseUp = this.mouseUp.bind(this);
     }
 
     componentDidMount() {
@@ -66,6 +67,15 @@ class Node extends React.PureComponent {
         this.props.onMouseDown(row, col, ev);
     }
 
+    mouseUp(ev) {
+        ev.stopPropagation();
+        this.props.onMouseUp(
+            ev,
+            this.props.row,
+            this.props.col
+            );
+    }
+
 
 
     render() {
@@ -107,6 +117,7 @@ class Node extends React.PureComponent {
                 onMouseOver={this.handleMouseOver}
                 onMouseOut={this.handleHover}
                 onMouseDown={this.mouseDown}
+                onMouseUp={this.mouseUp}
                 // onMouseMove={this.props.onMouseMove}
             >
 

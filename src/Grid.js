@@ -4,70 +4,22 @@ import {NORMAL, START, GOAL, OBSTACLE} from "./constants/NodeTypes";
 import DraggedNode from "./DraggedNode";
 import Row from "./Row"
 
-const clone =  require('rfdc')();
 
 
 class Grid extends React.Component {
 
-    NODESIZE = 30;
-
-    // ===============================
-    // ===============================
-    // =========== DEBUG =============
-
-    LOG_MOUSEOVER = false;
-    LOG_MOUSEDOWN = false;
-    LOG_MOUSEMOVE = false;
-    LOG_MOUSEOUT = false;
-    LOG_MOUSEUP = true;
-
-    // ================================
-
-
     constructor(props) {
         super(props);
-        this.startNode = [5, 15];
-        this.goalNode = [19, 29];
-        this.layout = [];
-        // this.draggedCoords = [null, null];
-        this.lastChanged = null;
-        this.setup();
 
-        this.addingEntities = false;
-        this.removingEntitues = false;
+        this.grid = React.createRef();
+        this.clearDraggedCoords = this.clearDraggedCoords.bind(this);
+        this.handleMouseMove = this.handleMouseMove.bind(this);
+        document.addEventListener('mousemove', this.handleMouseMove);
 
         this.state = {
-            layout: clone(this.layout),
-            changingStart: false,
-            changingGoal: false,
-            addingObstacle: false,
+            draggedCoords: null
+        }
 
-            // type of node that was clicked and could possibly be dragged
-            selectedType: null,
-            selected: null,
-
-            // what normal nodes should change into
-            selectedEntity: OBSTACLE,
-
-            // node currently hovered over
-            hovered: null,
-
-            draggedCoords: [null, null]
-        };
-
-        console.log(this.state.layout);
-
-        // this.handleMouseDown = this.handleMouseDown.bind(this);
-        this.handleMouseMove = this.handleMouseMove.bind(this);
-        this.handleMouseUp = this.handleMouseUp.bind(this);
-        this.handleMouseDown = this.handleMouseDown.bind(this);
-        this.addSelectedEntityAt = this.addSelectedEntityAt.bind(this);
-        this.boundMouseDowns = {};
-        this.boundMouseUps = {};
-        this.grid = React.createRef();
-
-        document.addEventListener('mousemove', this.handleMouseMove);
-        document.addEventListener('mouseup', this.handleMouseUp)
     }
 
 
@@ -117,90 +69,39 @@ class Grid extends React.Component {
 
     renderDraggedNode() {
 
-        console.log(this.state.selectedType !== NORMAL);
-        const [x, y] = this.state.draggedCoords;
+        console.log(this.props.selectedType !== NORMAL);
+        const [x, y] = this.state.draggedCoords || this.props.mouseDownPos;
 
         return(
             <DraggedNode
                 x={x}
                 y={y}
-                size={Math.round(this.NODESIZE / 2)}
-                type={this.state.selectedType}
+                size={Math.round(this.props.nodeSize / 2)}
+                type={this.props.selectedType}
+                clearDraggedCoords={this.clearDraggedCoords}
             />
         );
     }
 
-
-    // TODO: Give default grid as prop
-    setup() {
-        console.log("Setup");
-
-        for (let row = 0; row < this.props.rows; row++) {
-            let currRow = [];
-            for (let col = 0; col < this.props.cols; col++) {
-                currRow.push({
-                    x: col * this.NODESIZE,
-                    y: row * this.NODESIZE,
-                    ox: col * this.NODESIZE,
-                    oy: row * this.NODESIZE,
-                    type: NORMAL,
-                    hovering: false,
-                    dragged: false,
-                    row: row,
-                    col: col
-                        });
-            }
-            this.layout.push(currRow);
-        }
-
-        let [i, j]  = this.startNode;
-        this.layout[i][j].type = START;
-
-        [i, j] = this.goalNode;
-        this.layout[i][j].type = GOAL;
-        console.log(this.layout)
+    clearDraggedCoords() {
+        this.setState({
+            draggedCoords: null
+        })
     }
+
 
     flattenCoords(i, j) {
         return this.props.cols * i + j;
     }
 
-    handleMouseDown(i, j, ev) {
-
-        if (this.LOG_MOUSEDOWN) {
-            console.log("Mousedown");
-            console.log(arguments);
-        }
-
-        let selected = null;
-        // console.log(ev.clientX, ev.clientY);
-        // console.log(document.elementFromPoint(ev.clientX, ev.clientY));
 
 
-        // ev.preventDefault();
-
-        let layout = this.state.layout.slice();
-
-        const selectedType = layout[i][j].type;
-
-        // TODO: Add changes for weighted nodes and erasing
-        if (selectedType === NORMAL) {
-            layout[i] = layout[i].slice();
-            layout[i][j] = Object.assign({}, layout[i][j], {type: this.state.selectedEntity});
-            this.addingEntities = true;
-        }
-        else {
-            selected = [i, j];
-        }
-
-         this.setState({
-             layout: layout,
-             selectedType: selectedType,
-             selected: selected,
-             draggedCoords: [ev.clientX, ev.clientY]
-         });
-    }
-
+    /**
+     * Not in use
+     *
+     * @param ind
+     * @param ev
+     */
     handleMouseOver(ind, ev) {
         if (this.LOG_MOUSEOVER) {
             ev.persist();
@@ -222,6 +123,12 @@ class Grid extends React.Component {
 
     }
 
+    /**
+     *  Not in use
+     *
+     * @param ind
+     * @param ev
+     */
     handleMouseOut(ind, ev) {
         if (this.LOG_MOUSEOUT) {
             ev.persist();
@@ -241,58 +148,10 @@ class Grid extends React.Component {
 
     }
 
-    handleMouseUp(ev) {
-        if (this.LOG_MOUSEUP) {
-            console.log("Mouseup");
-            console.log(arguments);
-        }
-        const selectedType = this.state.selectedType;
-
-        if (this.state.selected) {
-
-            let layout = this.state.layout.slice();
-            const [x, y] = this.state.draggedCoords;
-
-            let [i, j] = [
-                Math.floor(y / this.NODESIZE),
-                Math.floor(x / this.NODESIZE)
-            ]
-
-            console.log(layout[i][j]);
-
-            // TODO: Account for selected in Component state possibly being null
-            if (layout[i][j].type === NORMAL) {
-                layout[i] = layout[i].slice();
-                layout[i][j] = Object.assign({}, layout[i][j],
-                    {
-                        type: selectedType
-                    });
-
-                const [si, sj] = this.state.selected;
-                layout[si] = layout[si].slice();
-                layout[si][sj] = Object.assign({},
-                    layout[si][sj],
-                    {
-                        type: NORMAL
-                    });
-            }
-
-            this.setState({
-                layout: layout,
-                selectedType: null,
-                selected: null,
-                draggedOver: null
-            });
-        }
-
-        this.addingEntities = false;
-
-
-    }
 
     handleMouseMove(ev) {
 
-        if (!(this.state.selectedType && this.state.selectedType !== NORMAL)) return;
+        if (!(this.props.selectedType && this.props.selectedType !== NORMAL)) return;
 
         if (this.LOG_MOUSEMOVE) {
             console.log("Mousemove");
@@ -312,24 +171,26 @@ class Grid extends React.Component {
         x = x - gridRect.left;
         y = y - gridRect.top;
 
-        if (x < this.NODESIZE / 2) {
-            x = this.NODESIZE / 2
+        let nodeSize = this.props.nodeSize;
+
+        if (x < nodeSize / 2) {
+            x = nodeSize / 2
         }
 
-        if (y < this.NODESIZE / 2) {
-            y = this.NODESIZE / 2
+        if (y < nodeSize / 2) {
+            y = nodeSize / 2
         }
 
-        if (x > 900 - this.NODESIZE / 2) {
-            x = 900 - this.NODESIZE / 2
+        if (x > 900 - nodeSize / 2) {
+            x = 900 - nodeSize / 2
         }
 
-        if (y > 600 - this.NODESIZE / 2) {
-            y = 600 - this.NODESIZE / 2
+        if (y > 600 - nodeSize / 2) {
+            y = 600 - nodeSize / 2
         }
 
-        let row = Math.floor(y / this.NODESIZE);
-        let col = Math.floor(x / this.NODESIZE);
+        let row = Math.floor(y / nodeSize);
+        let col = Math.floor(x / nodeSize);
 
         if (row > this.props.rows - 1) {
             row = this.props.rows - 1;
@@ -341,80 +202,12 @@ class Grid extends React.Component {
 
         console.log(row, col);
 
-        let draggedOver = this.state.draggedOver;
-        let dragi, dragj;
-        if (draggedOver) {
-            [dragi, dragj] = draggedOver;
-        }
-
-
-        if (row === this.props.rows - 1 || row === 0||
-            col === this.props.cols - 1 || col === 0) {
-
-            if (!draggedOver || dragi !== row || dragj !== col) {
-                draggedOver = [row, col];
-            }
-
-        }
-        else if (draggedOver !== null){
-            draggedOver = null;
-        }
-
-
-
-
-        // let layout = this.state.layout;
-        // const ind = this.flattenCoords(
-        //     y % this.NODESIZE,
-        //     x % this.NODESIZE
-        // );
-        // const currNode = layout[ind];
-
+        this.props.setDraggedOverNode(row, col);
 
         this.setState({
-            draggedOver: draggedOver,
             draggedCoords: [x, y]
         });
 
-
-        // ====================================================
-        // ====== Drag selected node ============================
-
-        // let layout = this.state.layout.slice();
-        // let selected = this.state.selected;
-        // layout[selected] = Object.assign({}, layout[selected],
-        //     {
-        //         x: ev.clientX - 10,
-        //         y: ev.clientY - 10
-        //     });
-        //
-        // this.setState({layout: layout});
-
-        // =========================================================
-
-    }
-
-    addSelectedEntityAt(i, j) {
-
-        console.log(this.addingEntities);
-
-        if (!this.addingEntities) return;
-
-        let currNodeType = this.state.layout[i][j].type;
-        console.log(currNodeType);
-
-        if (currNodeType === NORMAL) {
-            let layout = this.state.layout.slice()
-            layout[i] = layout[i].slice()
-
-            layout[i][j] = Object.assign({},
-                layout[i][j],
-                {type: this.state.selectedEntity})
-
-            this.setState({
-                layout: layout
-            })
-        }
     }
 
     /**
@@ -452,24 +245,25 @@ class Grid extends React.Component {
         let layout = [];
 
 
-        layout = this.state.layout.map((row, ind) => {
+        layout = this.props.layout.map((row, ind) => {
             return (
                 <Row
                     key={ind}
                     row={row}
-                    nodeSize={this.NODESIZE}
-                    onMouseDown={this.handleMouseDown}
-                    onMouseMove={this.handleMouseMove}
-                    draggedOver={this.state.draggedOver}
-                    selected={this.state.selected}
-                    addSelectedEntity={this.addSelectedEntityAt}
+                    nodeSize={this.props.nodeSize}
+                    onMouseDown={this.props.handleMouseDown}
+                    onMouseUp={this.props.handleMouseUp}
+                    // onMouseMove={this.handleMouseMove}
+                    draggedOver={this.props.draggedOver}
+                    selected={this.props.selected}
+                    addSelectedEntity={this.props.addSelectedEntity}
                 />);
         });
 
        return(
           <svg
-            width={this.props.cols * this.NODESIZE}
-            height={this.props.rows * this.NODESIZE}
+            width={this.props.cols * this.props.nodeSize}
+            height={this.props.rows * this.props.nodeSize}
             ref={this.grid}
           >
             <g>
@@ -478,7 +272,7 @@ class Grid extends React.Component {
                 }
             </g>
             <g style={{pointerEvents: "none"}}>
-              {this.state.selectedType && this.state.selectedType !== NORMAL && this.renderDraggedNode()}
+              {this.props.selectedType && this.props.selectedType !== NORMAL && this.renderDraggedNode()}
             </g>
           </svg>
 
@@ -488,4 +282,4 @@ class Grid extends React.Component {
     }
 }
 
-export default Grid
+export default Grid;
