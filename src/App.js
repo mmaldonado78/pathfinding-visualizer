@@ -63,6 +63,7 @@ class App extends React.Component {
         this.handleMouseDown = this.handleMouseDown.bind(this);
         this.setDraggedOverNode = this.setDraggedOverNode.bind(this);
         this.addSelectedEntityAt = this.addSelectedEntityAt.bind(this);
+        this.clearGridObstacles = this.clearGridObstacles.bind(this);
         this.boundMouseDowns = {};
         this.boundMouseUps = {};
 
@@ -99,9 +100,9 @@ class App extends React.Component {
         console.log(this.layout)
     }
 
-    // *****************************************************************
-    // -----------------------------------------------------------------
-    // Layout update methods
+    // #################################################################
+    // #                   * Layout Update Methods *                   #
+    // #################################################################
     // TODO: Move to Redux
 
     handleMouseDown(i, j, ev) {
@@ -248,9 +249,37 @@ class App extends React.Component {
     }
 
 
-    // ---------------------------------------------------------------------
-    // *********************************************************************
+    // #####################################################################
+    // #####################################################################
 
+    // #####################################################################
+    // #                    * Menu Actions *                               #
+    // #####################################################################
+
+    /**
+     * Sets the type of a node to NORMAL if it is a weighted node or a wall.
+     */
+    clearGridObstacles() {
+        const obstacles = new Set([OBSTACLE])
+
+        let layout = this.state.layout.map(row => {
+            return row.map(node => {
+                if (obstacles.has(node.type)) {
+                    return Object.assign({}, node, {type: NORMAL});
+                }
+                else {
+                    return node;
+                }
+            });
+        });
+
+        this.setState({
+            layout: layout
+        });
+    }
+
+    // #                                                                   #
+    // #####################################################################
     render() {
         return (
           <div id={"main"}>
@@ -268,7 +297,9 @@ class App extends React.Component {
                 selectedType={this.state.selectedType}
                 mouseDownPos={this.state.mouseDownPos}
             />
-            <Menu/>
+            <Menu
+                clearGridObstacles={this.clearGridObstacles}
+            />
           </div>
 
 

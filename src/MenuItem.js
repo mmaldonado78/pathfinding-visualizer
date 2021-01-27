@@ -6,15 +6,15 @@ class MenuItem extends React.Component {
     constructor(props) {
         super(props);
 
-        this.setState({
+        this.state = {
             active: false
-        })
+        };
     }
 
     render() {
         return (
             <div id={"menu-item"}>
-                <button>
+                <button onClick={this.props.action}>
                     {this.props.itemName}
                 </button>
             </div>

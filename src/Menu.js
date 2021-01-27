@@ -17,7 +17,10 @@ class Menu extends React.Component {
                 <MenuItem itemName={"Change Node"}/>
                 <MenuItem itemName={"Eraser"}/>
                 <MenuItem itemName={"Configure Algorithm"}/>
-                <MenuItem itemName={"Clear Obstacles"}/>
+                <MenuItem
+                    action={this.props.clearGridObstacles}
+                    itemName={"Clear Obstacles"}
+                />
             </div>
         )
     }
