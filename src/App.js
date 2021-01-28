@@ -283,6 +283,9 @@ class App extends React.Component {
     render() {
         return (
           <div id={"main"}>
+            <Menu
+                clearGridObstacles={this.clearGridObstacles}
+            />
             <Grid
                 rows={this.ROWS}
                 cols={this.COLS}
@@ -297,9 +300,7 @@ class App extends React.Component {
                 selectedType={this.state.selectedType}
                 mouseDownPos={this.state.mouseDownPos}
             />
-            <Menu
-                clearGridObstacles={this.clearGridObstacles}
-            />
+
           </div>
 
 

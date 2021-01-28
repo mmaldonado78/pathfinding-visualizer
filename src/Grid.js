@@ -70,7 +70,17 @@ class Grid extends React.Component {
     renderDraggedNode() {
 
         console.log(this.props.selectedType !== NORMAL);
-        const [x, y] = this.state.draggedCoords || this.props.mouseDownPos;
+
+        let x, y;
+        if (this.state.draggedCoords) {
+            [x, y] = this.state.draggedCoords;
+        }
+        else {
+            let gridRect = this.grid.current.getBoundingClientRect();
+            [x, y] = this.props.mouseDownPos;
+            x -= gridRect.left;
+            y -= gridRect.top;
+        }
 
         return(
             <DraggedNode
@@ -174,19 +184,19 @@ class Grid extends React.Component {
         let nodeSize = this.props.nodeSize;
 
         if (x < nodeSize / 2) {
-            x = nodeSize / 2
+            x = nodeSize / 2;
         }
 
         if (y < nodeSize / 2) {
-            y = nodeSize / 2
+            y = nodeSize / 2;
         }
 
-        if (x > 900 - nodeSize / 2) {
-            x = 900 - nodeSize / 2
+        if (x > gridRect.right - gridRect.left - nodeSize / 2) {
+           x = gridRect.right - gridRect.left - nodeSize / 2;
         }
 
-        if (y > 600 - nodeSize / 2) {
-            y = 600 - nodeSize / 2
+        if (y > gridRect.bottom - gridRect.top - nodeSize / 2) {
+            y = gridRect.bottom - gridRect.top - nodeSize / 2;
         }
 
         let row = Math.floor(y / nodeSize);
