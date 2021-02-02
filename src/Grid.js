@@ -3,6 +3,7 @@ import Node from "./Node.js"
 import {NORMAL, START, GOAL, OBSTACLE} from "./constants/NodeTypes";
 import DraggedNode from "./DraggedNode";
 import Row from "./Row"
+import "./Grid.css"
 
 
 
@@ -271,7 +272,7 @@ class Grid extends React.Component {
         });
 
        return(
-          <svg
+          <svg className={"grid-container"}
             width={this.props.cols * this.props.nodeSize}
             height={this.props.rows * this.props.nodeSize}
             ref={this.grid}

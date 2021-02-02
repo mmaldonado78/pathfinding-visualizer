@@ -32,6 +32,13 @@
   color: #61dafb;
 }
 
+.editable-container {
+  display: flex;
+  height: 100%;
+  flex-grow: 1;
+  position: relative;
+}
+
 #main {
   width: 100%;
   height: 100vh;

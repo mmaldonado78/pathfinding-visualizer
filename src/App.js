@@ -4,6 +4,7 @@ import './App.css';
 import Grid from './Grid.js'
 import Menu from './Menu.js'
 import {GOAL, NORMAL, OBSTACLE, START} from "./constants/NodeTypes";
+import MenuWindow from "./MenuWindow";
 
 const clone =  require('rfdc')();
 
@@ -286,7 +287,8 @@ class App extends React.Component {
             <Menu
                 clearGridObstacles={this.clearGridObstacles}
             />
-            <Grid
+            <div className={"editable-container"}>
+              <Grid
                 rows={this.ROWS}
                 cols={this.COLS}
                 nodeSize={this.NODESIZE}
@@ -299,8 +301,9 @@ class App extends React.Component {
                 selected={this.state.selected}
                 selectedType={this.state.selectedType}
                 mouseDownPos={this.state.mouseDownPos}
-            />
-
+              />
+              <MenuWindow/>
+            </div>
           </div>
 
 
