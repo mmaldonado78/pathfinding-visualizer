@@ -5,6 +5,8 @@ import Grid from './Grid.js'
 import Menu from './Menu.js'
 import {GOAL, NORMAL, OBSTACLE, START} from "./constants/NodeTypes";
 import MenuWindow from "./MenuWindow";
+import ConfigMenu from "./ConfigMenu";
+import EntitySelector from "./EntitySelector";
 
 const clone =  require('rfdc')();
 
@@ -249,10 +251,6 @@ class App extends React.Component {
         }
     }
 
-
-    // #####################################################################
-    // #####################################################################
-
     // #####################################################################
     // #                    * Menu Actions *                               #
     // #####################################################################
@@ -279,8 +277,7 @@ class App extends React.Component {
         });
     }
 
-    // #                                                                   #
-    // #####################################################################
+
     render() {
         return (
           <div id={"main"}>
@@ -302,7 +299,9 @@ class App extends React.Component {
                 selectedType={this.state.selectedType}
                 mouseDownPos={this.state.mouseDownPos}
               />
-              <MenuWindow/>
+              <MenuWindow>
+                  <EntitySelector/>
+              </MenuWindow>
             </div>
           </div>
 

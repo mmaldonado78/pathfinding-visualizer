@@ -14,7 +14,7 @@ class MenuItem extends React.Component {
     render() {
         return (
             <div id={"menu-item"}>
-                <button onClick={this.props.action}>
+                <button className={"menu-button"} onClick={this.props.action}>
                     {this.props.itemName}
                 </button>
             </div>
