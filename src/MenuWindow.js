@@ -3,35 +3,28 @@ import "./MenuWindow.css";
 
 class MenuWindow extends React.Component {
 
+    constructor(props) {
+        super(props);
+
+        this.backDrop = React.createRef();
+        this.backDropClick = this.backDropClick.bind(this);
+    }
+
     render() {
         return (
-            <div className={"backdrop"}
-                // style={{
-                // backgroundColor: "rgba(0, 0, 0, .8)",
-                // backdropFilter: "blur(4px)",
-                // opacity: .75,
-                // height: "100%",
-                // width: "100%",
-                // display: "flex",
-                // alignItems: "center",
-                // justifyContent: "center",
-                // position: "absolute"
-
-            // }}
-            >
-                <div className={"window-container"}
-                    // style={{
-                    // minHeight: "200px",
-                    // minWidth: "300px",
-                    // backgroundColor: "darkgrey",
-                    // borderRadius: "10px"
-                // }}
-                >
+            <div ref={this.backDrop} className={"backdrop"} onClick={this.backDropClick}>
+                <div className={"window-container"}>
                     {this.props.children}
                 </div>
 
             </div>
         )
+    }
+
+    backDropClick(ev) {
+        if (ev.target === this.backDrop.current) {
+            this.props.closeSubmenu();
+        }
     }
 }
 

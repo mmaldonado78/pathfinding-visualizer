@@ -7,6 +7,7 @@ import {GOAL, NORMAL, OBSTACLE, START} from "./constants/NodeTypes";
 import MenuWindow from "./MenuWindow";
 import ConfigMenu from "./ConfigMenu";
 import EntitySelector from "./EntitySelector";
+import {CONFIG, ENTITY_SELECTOR} from "./constants/Submenus";
 
 const clone =  require('rfdc')();
 
@@ -41,6 +42,14 @@ class App extends React.Component {
         this.addingEntities = false;
         this.removingEntitues = false;
 
+        this.currentSubmenuName = null;
+        this.submenuComponents = new Map(
+            [
+                [CONFIG, <ConfigMenu/>],
+                [ENTITY_SELECTOR, <EntitySelector/>]
+            ]
+        );
+
         this.state = {
             layout: clone(this.layout),
             changingStart: false,
@@ -57,7 +66,12 @@ class App extends React.Component {
             // node currently hovered over
             hovered: null,
 
-            mouseDownPos: [null, null]
+            mouseDownPos: [null, null],
+
+            // menu control
+            menuOpen: false,
+            currentSubmenu: null
+
         };
 
         console.log(this.state.layout);
@@ -67,6 +81,8 @@ class App extends React.Component {
         this.setDraggedOverNode = this.setDraggedOverNode.bind(this);
         this.addSelectedEntityAt = this.addSelectedEntityAt.bind(this);
         this.clearGridObstacles = this.clearGridObstacles.bind(this);
+        this.closeSubmenu = this.closeSubmenu.bind(this);
+        this.handleSubmenuChange = this.handleSubmenuChange.bind(this);
         this.boundMouseDowns = {};
         this.boundMouseUps = {};
 
@@ -109,6 +125,8 @@ class App extends React.Component {
     // TODO: Move to Redux
 
     handleMouseDown(i, j, ev) {
+
+        //TODO: Set adding/removingEntities while processing result from EntitySelector
 
         if (this.LOG_MOUSEDOWN) {
             console.log("Mousedown");
@@ -195,11 +213,12 @@ class App extends React.Component {
     }
 
     /**
-     * Simulates hovering over a node when the mouse moves off of the grid while
-     * dragging another node.
+     * Simulates hovering over a node at the edge of the grid
+     * when the mouse moves off of the grid while dragging
+     * another node.
      *
-     * @param row
-     * @param col
+     * @param row of Node
+     * @param col of Node
      */
     setDraggedOverNode(row, col) {
 
@@ -278,11 +297,38 @@ class App extends React.Component {
     }
 
 
+    closeSubmenu() {
+        this.currentSubmenuName = null;
+        this.setState({
+            menuOpen: false
+        });
+    }
+
+    handleSubmenuChange(submenuName) {
+
+        console.log(submenuName, this.currentSubmenuName)
+
+        let currSubmenu = this.currentSubmenuName;
+
+        if (submenuName === currSubmenu) {
+            this.closeSubmenu();
+        }
+        else {
+            this.currentSubmenuName = submenuName;
+            this.setState({
+                menuOpen: true,
+                currentSubmenu: this.submenuComponents.get(submenuName)
+            });
+        }
+    }
+
+
     render() {
         return (
           <div id={"main"}>
             <Menu
                 clearGridObstacles={this.clearGridObstacles}
+                handleSubmenuChange={this.handleSubmenuChange}
             />
             <div className={"editable-container"}>
               <Grid
@@ -299,9 +345,10 @@ class App extends React.Component {
                 selectedType={this.state.selectedType}
                 mouseDownPos={this.state.mouseDownPos}
               />
-              <MenuWindow>
-                  <EntitySelector/>
-              </MenuWindow>
+                {this.state.menuOpen &&
+              <MenuWindow closeSubmenu={this.closeSubmenu}>
+                  {this.state.currentSubmenu}
+              </MenuWindow>}
             </div>
           </div>
 

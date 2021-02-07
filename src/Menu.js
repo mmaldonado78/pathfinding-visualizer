@@ -1,6 +1,7 @@
 import React from "react";
 import './Menu.css';
 import MenuItem from "./MenuItem";
+import {CONFIG, ENTITY_SELECTOR} from "./constants/Submenus";
 
 class Menu extends React.Component {
 
@@ -14,9 +15,15 @@ class Menu extends React.Component {
                 <MenuItem itemName={"Run"}/>
                 <MenuItem itemName={"Step Forward"}/>
                 <MenuItem itemName={"Step Backward"}/>
-                <MenuItem itemName={"Change Node"}/>
+                <MenuItem itemName={ENTITY_SELECTOR}
+                          actionArgs={[ENTITY_SELECTOR]}
+                          action={this.props.handleSubmenuChange}
+                />
                 <MenuItem itemName={"Eraser"}/>
-                <MenuItem itemName={"Configure Algorithm"}/>
+                <MenuItem itemName={CONFIG}
+                          actionArgs={[CONFIG]}
+                          action={this.props.handleSubmenuChange}
+                />
                 <MenuItem
                     action={this.props.clearGridObstacles}
                     itemName={"Clear Obstacles"}
