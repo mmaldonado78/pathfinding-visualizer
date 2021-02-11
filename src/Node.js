@@ -1,5 +1,4 @@
-import React, {PureComponent} from "react";
-import {Raphael, Rect} from "react-raphael";
+import React from "react";
 import LightenDarkenColor from  "./lightenDarken.js"
 
 class Node extends React.PureComponent {
@@ -21,30 +20,6 @@ class Node extends React.PureComponent {
 
     componentDidMount() {
         console.log("Node mounted");
-    }
-
-    // shouldComponentUpdate(nextProps, nextState, nextContext) {
-    //
-    //     return (this.props.node !== nextProps.node || nextState !== this.state);
-    // }
-
-
-    componentDidUpdate(prevProps, prevState, snapshot) {
-
-    }
-
-
-    handleMouseMove(ev, x, y) {
-        console.log("Mousemove");
-        console.log(arguments);
-        if (!this.props.node.dragged) return;
-
-
-        this.setState({
-            x: x - 10,
-            y: y - 10
-        })
-
     }
 
     handleMouseOver() {
@@ -77,11 +52,7 @@ class Node extends React.PureComponent {
     }
 
 
-
     render() {
-        console.log(`Node ${this.props.x + this.props.y} rendered`);
-        // console.log(`Dragged over: ${this.props.draggedOver}`);
-
 
         let fill = this.props.type;
 
@@ -91,12 +62,6 @@ class Node extends React.PureComponent {
         if (this.state.hovering || this.props.draggedOver) {
             fill = LightenDarkenColor(fill, -25);
         }
-
-
-
-
-        // const dragged = this.props.node.dragged;
-        // const opacity = this.props.node.dragged ? .7 : 1;
 
 
         return(
@@ -118,7 +83,6 @@ class Node extends React.PureComponent {
                 onMouseOut={this.handleHover}
                 onMouseDown={this.mouseDown}
                 onMouseUp={this.mouseUp}
-                // onMouseMove={this.props.onMouseMove}
             >
 
             </rect>

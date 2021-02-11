@@ -3,11 +3,14 @@ import logo from './logo.svg';
 import './App.css';
 import Grid from './Grid.js'
 import Menu from './Menu.js'
-import {GOAL, NORMAL, OBSTACLE, START} from "./constants/NodeTypes";
+import {GOAL, NORMAL, OBSTACLE, LO_WEIGHT, MED_WEIGHT, HI_WEIGHT, START} from "./constants/NodeTypes";
 import MenuWindow from "./MenuWindow";
 import ConfigMenu from "./ConfigMenu";
 import EntitySelector from "./EntitySelector";
 import {CONFIG, ENTITY_SELECTOR} from "./constants/Submenus";
+import {A_STAR, NO_WEIGHTS} from "./constants/Algorithms";
+import {EUCLIDEAN} from "./constants/Heuristics";
+import {WEIGHTS} from "./constants/EntityNames";
 
 const clone =  require('rfdc')();
 
@@ -36,35 +39,29 @@ class App extends React.Component {
         this.startNode = [5, 15];
         this.goalNode = [19, 29];
         this.layout = [];
-        this.lastChanged = null;
         this.setup();
 
         this.addingEntities = false;
-        this.removingEntitues = false;
+        this.removingEntities = false;
 
         this.currentSubmenuName = null;
-        this.submenuComponents = new Map(
-            [
-                [CONFIG, <ConfigMenu/>],
-                [ENTITY_SELECTOR, <EntitySelector/>]
-            ]
-        );
+
 
         this.state = {
             layout: clone(this.layout),
-            changingStart: false,
-            changingGoal: false,
-            addingObstacle: false,
 
             // type of node that was clicked and could possibly be dragged
             selectedType: null,
             selected: null,
 
-            // what normal nodes should change into
-            selectedEntity: OBSTACLE,
-
-            // node currently hovered over
-            hovered: null,
+            userOptions: {
+                selectedEntity: OBSTACLE,
+                selectedAlgorithm: A_STAR,
+                selectedHeuristic: EUCLIDEAN,
+                useHeatMap: false,
+                selectedHeatMap: null,
+                visitDiagonals: true
+            },
 
             mouseDownPos: [null, null],
 
@@ -73,6 +70,7 @@ class App extends React.Component {
             currentSubmenu: null
 
         };
+
 
         console.log(this.state.layout);
 
@@ -83,8 +81,16 @@ class App extends React.Component {
         this.clearGridObstacles = this.clearGridObstacles.bind(this);
         this.closeSubmenu = this.closeSubmenu.bind(this);
         this.handleSubmenuChange = this.handleSubmenuChange.bind(this);
-        this.boundMouseDowns = {};
-        this.boundMouseUps = {};
+        this.updateUserOptions = this.updateUserOptions.bind(this);
+        this.renderEntitySelector = this.renderEntitySelector.bind(this);
+        this.renderConfigMenu = this.renderConfigMenu.bind(this);
+
+        this.submenuComponents = new Map(
+            [
+                [CONFIG, this.renderConfigMenu],
+                [ENTITY_SELECTOR, this.renderEntitySelector]
+            ]
+        );
 
         window.addEventListener('mouseup', this.handleMouseUp);
     }
@@ -140,7 +146,7 @@ class App extends React.Component {
         // TODO: Add changes for weighted nodes and erasing
         if (selectedType === NORMAL) {
             layout[i] = layout[i].slice();
-            layout[i][j] = Object.assign({}, layout[i][j], {type: this.state.selectedEntity});
+            layout[i][j] = Object.assign({}, layout[i][j], {type: this.state.userOptions.selectedEntity});
             this.addingEntities = true;
         }
         else {
@@ -213,7 +219,7 @@ class App extends React.Component {
     }
 
     /**
-     * Simulates hovering over a node at the edge of the grid
+     * Tracks the node along any grid edge that should be hovered over
      * when the mouse moves off of the grid while dragging
      * another node.
      *
@@ -262,7 +268,7 @@ class App extends React.Component {
 
             layout[i][j] = Object.assign({},
                 layout[i][j],
-                {type: this.state.selectedEntity})
+                {type: this.state.userOptions.selectedEntity})
 
             this.setState({
                 layout: layout
@@ -296,6 +302,15 @@ class App extends React.Component {
         });
     }
 
+    usingWeights() {
+        return this.state.layout.some(row => {
+            return row.some(node => {
+                return [LO_WEIGHT, MED_WEIGHT, HI_WEIGHT].includes(node.type);
+            });
+
+        });
+    }
+
 
     closeSubmenu() {
         this.currentSubmenuName = null;
@@ -317,9 +332,47 @@ class App extends React.Component {
             this.currentSubmenuName = submenuName;
             this.setState({
                 menuOpen: true,
-                currentSubmenu: this.submenuComponents.get(submenuName)
+                currentSubmenu: this.submenuComponents.get(submenuName)()
             });
         }
+    }
+
+    renderConfigMenu() {
+        return(
+            <ConfigMenu
+                userOptions={this.state.userOptions}
+                updateUserOptions={this.updateUserOptions}
+                disabledAlgorithms={
+                    this.usingWeights() ?
+                        NO_WEIGHTS : []
+                }
+            />
+        )
+    }
+
+    renderEntitySelector() {
+        return(
+            <EntitySelector
+                currSelectedEntity={this.state.userOptions.selectedEntity}
+                disabledEntities={
+                    NO_WEIGHTS.includes(this.state.userOptions.selectedAlgorithm) ?
+                        WEIGHTS : []
+                }
+                updateUserOptions={this.updateUserOptions}
+            />
+        );
+    }
+
+    // ########################################################################
+    // #                       * Update User Options *                        #
+    // ########################################################################
+
+    updateUserOptions(newUserOptions) {
+
+        this.setState({
+            userOptions: Object.assign({}, this.state.userOptions,
+                newUserOptions)
+        });
     }
 
 
@@ -345,10 +398,12 @@ class App extends React.Component {
                 selectedType={this.state.selectedType}
                 mouseDownPos={this.state.mouseDownPos}
               />
-                {this.state.menuOpen &&
-              <MenuWindow closeSubmenu={this.closeSubmenu}>
-                  {this.state.currentSubmenu}
-              </MenuWindow>}
+                {
+                    this.state.menuOpen &&
+                    <MenuWindow closeSubmenu={this.closeSubmenu}>
+                        {this.state.currentSubmenu}
+                    </MenuWindow>
+                }
             </div>
           </div>
 

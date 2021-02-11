@@ -1,5 +1,4 @@
 import React from 'react';
-import Node from "./Node.js"
 import {NORMAL, START, GOAL, OBSTACLE} from "./constants/NodeTypes";
 import DraggedNode from "./DraggedNode";
 import Row from "./Row"
@@ -28,44 +27,6 @@ class Grid extends React.Component {
     componentDidMount() {
         console.log("Grid mounted");
 
-    }
-
-    /**
-     * Not in use
-     *
-     * @param ind
-     * @returns {JSX.Element}
-     */
-    renderNode(ind) {
-        const node = this.state.layout[ind];
-        // console.log(node);
-
-        if (!this.boundMouseDowns[ind]) {
-            this.boundMouseDowns[ind] = this.handleMouseDown.bind(this, ind);
-        }
-
-        // if (!this.boundMouseUps[ind]) {
-        //     this.boundMouseUps[ind] = this.handleMouseUp.bind(this, ind);
-        // }
-
-        // console.log(`Dragged over condition: ${!!this.state.draggedOver && this.state.draggedOver === ind}`)
-
-        return(
-            <Node
-                key={node.ox.toString() + node.oy.toString()}
-                // node={node}
-                size={this.NODESIZE}
-                x={node.x}
-                y={node.y}
-                type={node.type}
-                draggedOver={!!this.state.draggedOver && this.state.draggedOver === ind}
-                selected={!!this.state.selected && this.state.selected === ind}
-
-                onMouseMove={this.handleMouseMove}
-                onMouseDown={this.boundMouseDowns[ind]}
-                // onMouseUp={this.boundMouseUps[ind]}
-            />
-        );
     }
 
     renderDraggedNode() {
@@ -98,65 +59,6 @@ class Grid extends React.Component {
         this.setState({
             draggedCoords: null
         })
-    }
-
-
-    flattenCoords(i, j) {
-        return this.props.cols * i + j;
-    }
-
-
-
-    /**
-     * Not in use
-     *
-     * @param ind
-     * @param ev
-     */
-    handleMouseOver(ind, ev) {
-        if (this.LOG_MOUSEOVER) {
-            ev.persist();
-            console.log("Mouseover");
-            console.log(arguments);
-        }
-
-
-        // if (!this.state.selectedType) {
-        // }
-        // this.updateNodeType();
-        // this.handleHoverIn(ind);
-        let newType = this.updateNodeType(ind);
-
-        let layout = this.state.layout.slice();
-        layout[ind] = Object.assign({}, layout[ind], {hovering: true, type: newType});
-        this.setState({hovered: ind, layout: layout});
-
-
-    }
-
-    /**
-     *  Not in use
-     *
-     * @param ind
-     * @param ev
-     */
-    handleMouseOut(ind, ev) {
-        if (this.LOG_MOUSEOUT) {
-            ev.persist();
-            console.log("Mouseout");
-            console.log(arguments);
-        }
-
-        const currentType = this.state.layout[ind].type;
-        const newType = (this.state.selectedType === currentType) ? 'normal' : currentType;
-
-        let layout = this.state.layout.slice();
-        layout[ind] = Object.assign({}, layout[ind], {hovering: false, type: newType});
-        this.setState({layout: layout});
-
-        console.log(`\tUpdating on hover out - Current type: ${currentType}, updated type: ${newType}`);
-
-
     }
 
 
@@ -221,36 +123,6 @@ class Grid extends React.Component {
 
     }
 
-    /**
-     * Returns the new type of the node that user hovered over if it should be changed
-     * @returns {string|null}
-     */
-    updateNodeType(ind) {
-        const selectedType = this.state.selectedType;
-        const currNode = this.state.hovered;
-        const currType = this.state.layout[ind].type;
-
-        if (selectedType && currType === 'normal') {
-
-            let newType;
-
-            if (selectedType === 'normal') {
-                newType = this.state.selectedEntity;
-            }
-            else {
-                newType = selectedType
-            }
-
-            console.log(`Updating node to type ${newType}`);
-
-            return newType;
-        }
-
-        // console.log(`currNode: ${currNode}`);
-        return currType;
-
-
-    }
 
     render() {
         let layout = [];

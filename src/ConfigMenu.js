@@ -2,47 +2,54 @@ import React, {useState} from "react";
 import algorithms, {NO_HEURISTIC, NO_WEIGHTS} from "./constants/Algorithms";
 import heuristics from "./constants/Heuristics";
 
-const algButtons = algorithms.map(algName => {
-    return(
-        <label>
-             <input type={"radio"} value={algName} name={"algorithm"}/>
-             {algName}
-         </label>
+const ConfigMenu = ({userOptions, updateUserOptions, disabledAlgorithms}) => {
 
-)});
-
-const ConfigMenu = ({updateAlgorithmOptions}) => {
-
-    const [selectedAlgorithm, setSelectedAlgorithm] = useState("");
-    const [selectedHeuristic, setSelectedHeuristic] = useState("");
-    const [heatMapsSelectable, setHeatMapsSelectable] = useState(false);
-    const [selectedHeatMap, setSelectedHeatMap] = useState("");
-    const [useDiagonals, setUseDiagonals] = useState(false);
+    const [selectedAlgorithm, setSelectedAlgorithm] = useState(userOptions.selectedAlgorithm);
+    const [selectedHeuristic, setSelectedHeuristic] = useState(userOptions.selectedHeuristic);
+    const [heatMapsSelectable, setHeatMapsSelectable] = useState(userOptions.useHeatMap);
+    const [selectedHeatMap, setSelectedHeatMap] = useState(userOptions.selectedHeatMap);
+    const [useDiagonals, setUseDiagonals] = useState(userOptions.visitDiagonals);
 
 
-    const makeRadioGroup = (optionNames, groupName) => {
-        return optionNames.map(optionName => {
+    /**
+     * Maps a list of inputted labels to a single group of radio input elements
+     *
+     * @param buttonNames {string[]} mapped to the label of each individual radio button
+     * @param groupName {string} name attribute of radio group
+     * @param setDisabled {function} returns true if a given radio button should
+     * be disabled
+     * @param checkedName {string} name of radio button that should be checked by default
+     * @returns {*}
+     */
+    const makeRadioGroup = (buttonNames, groupName, setDisabled, checkedName) => {
+        return buttonNames.map(buttonName => {
             return(
-                <label>
-                    <input type={"radio"} value={optionName} name={groupName}/>
-                    {optionName}
+                <label key={buttonName}>
+                    <input type={"radio"}
+                           value={buttonName}
+                           name={groupName}
+                           disabled={setDisabled(buttonName)}
+                           defaultChecked={checkedName === buttonName}
+                    />
+                    {buttonName}
                 </label>
             )
         })
     }
 
-    // const algButtons = [DFS, BFS, UCS, A_STAR].map(algName => {
-    //     return(
-    //         <label>
-    //             <input type={"radio"} value={algName} name={"algorithm"}/>
-    //             {algName}
-    //         </label>
-    //     )
-    // });
 
-    // const heurButtons = heuristics.map(heur => {
-    //     ret
-    // })
+    const prepareUserOptions = () => {
+        const newUserOptions = {
+            selectedAlgorithm: selectedAlgorithm,
+            selectedHeuristic: selectedHeuristic,
+            useHeatMap: heatMapsSelectable,
+            selectedHeatMap: selectedHeatMap,
+            visitDiagonals: useDiagonals
+        }
+
+        updateUserOptions(newUserOptions);
+    }
+
 
     return (
         <div>
@@ -50,13 +57,15 @@ const ConfigMenu = ({updateAlgorithmOptions}) => {
                 Algorithm
             </div>
             <div className={"radio-group"} onChange={ev => setSelectedAlgorithm(ev.target.value)}>
-                {makeRadioGroup(algorithms, "algorithm")}
+                {makeRadioGroup(algorithms, "algorithm",
+                    name => disabledAlgorithms.includes(name), selectedAlgorithm)}
             </div>
             <div className={"header"}>
                 Heuristic
             </div>
             <div className={"radio-group"} onChange={ev => setSelectedHeuristic(ev.target.value)}>
-                {makeRadioGroup(heuristics, "heuristic")}
+                {makeRadioGroup(heuristics, "heuristic",
+                    () => NO_HEURISTIC.includes(selectedAlgorithm), selectedHeuristic)}
             </div>
             <div className={"warning"}>
                 <span className={"warning-text"}>
@@ -68,22 +77,23 @@ const ConfigMenu = ({updateAlgorithmOptions}) => {
             <div>
                 <label>
                     <input type={"checkbox"}
-                           onChange={() => setHeatMapsSelectable(!heatMapsSelectable)}/>
+                           onChange={() => setHeatMapsSelectable(!heatMapsSelectable)}
+                           defaultChecked={heatMapsSelectable}
+                    />
                     Heatmap
                 </label>
             </div>
             <div className={"radio-group"}
                  onChange={ev => setSelectedHeatMap(ev.target.value)}>
-                <label>
-                    <input type={"radio"} value={"Cost"} name={"heatmap"}
-                           disabled={!heatMapsSelectable}/>
-                    Cost
-                </label>
-                <label>
-                    <input type={"radio"} value={"Heuristic"} name={"heatmap"}
-                           disabled={!heatMapsSelectable || NO_HEURISTIC.includes(selectedAlgorithm)}/>
-                    Heuristic
-                </label>
+
+                {
+                    makeRadioGroup(["Cost", "Heuristic"], "heatmap",
+                    name =>
+                        !heatMapsSelectable ||
+                        (name === "Heuristic" && NO_HEURISTIC.includes(selectedAlgorithm)),
+                        selectedHeatMap
+                    )
+                }
             </div>
             <div>
                 <label>
@@ -99,13 +109,7 @@ const ConfigMenu = ({updateAlgorithmOptions}) => {
             <hr/>
             <div >
                 <button>Cancel</button>
-                <button>Save</button>
-            </div>
-            <div>
-                {selectedAlgorithm} {<br/>}
-                {selectedHeuristic} {<br/>}
-                {heatMapsSelectable.toString()}
-
+                <button onClick={prepareUserOptions}>Save</button>
             </div>
 
         </div>
