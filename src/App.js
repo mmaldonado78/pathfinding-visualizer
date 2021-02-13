@@ -3,7 +3,7 @@ import logo from './logo.svg';
 import './App.css';
 import Grid from './Grid.js'
 import Menu from './Menu.js'
-import {GOAL, NORMAL, OBSTACLE, LO_WEIGHT, MED_WEIGHT, HI_WEIGHT, START} from "./constants/NodeTypes";
+import {GOAL, NORMAL, NORMAL as ERASER, OBSTACLE, LO_WEIGHT, MED_WEIGHT, HI_WEIGHT, START} from "./constants/NodeTypes";
 import MenuWindow from "./MenuWindow";
 import ConfigMenu from "./ConfigMenu";
 import EntitySelector from "./EntitySelector";
@@ -67,7 +67,10 @@ class App extends React.Component {
 
             // menu control
             menuOpen: false,
-            currentSubmenu: null
+            currentSubmenu: null,
+
+            addingEntities: false,
+            removingEntities: false
 
         };
 
@@ -78,6 +81,7 @@ class App extends React.Component {
         this.handleMouseDown = this.handleMouseDown.bind(this);
         this.setDraggedOverNode = this.setDraggedOverNode.bind(this);
         this.addSelectedEntityAt = this.addSelectedEntityAt.bind(this);
+        this.removeEntityAt = this.removeEntityAt.bind(this);
         this.clearGridObstacles = this.clearGridObstacles.bind(this);
         this.closeSubmenu = this.closeSubmenu.bind(this);
         this.handleSubmenuChange = this.handleSubmenuChange.bind(this);
@@ -140,24 +144,39 @@ class App extends React.Component {
         }
 
         let selected = null;
+        let addingEntities = this.state.addingEntities;
+        let removingEntities = this.state.removingEntities;
         let layout = this.state.layout.slice();
         const selectedType = layout[i][j].type;
 
         // TODO: Add changes for weighted nodes and erasing
-        if (selectedType === NORMAL) {
-            layout[i] = layout[i].slice();
-            layout[i][j] = Object.assign({}, layout[i][j], {type: this.state.userOptions.selectedEntity});
-            this.addingEntities = true;
+        if (selectedType === NORMAL
+            && this.state.userOptions.selectedEntity !== ERASER) {
+            // layout[i] = layout[i].slice();
+            // layout[i][j] = Object.assign({}, layout[i][j], {type: this.state.userOptions.selectedEntity});
+            this.addSelectedEntityAt(i, j);
+
+            addingEntities = true;
+        }
+        else if (selectedType !== GOAL && selectedType !== START &&
+            this.state.userOptions.selectedEntity === ERASER) {
+
+            this.removeEntityAt(i, j);
+
+            removingEntities = true;
+
         }
         else {
             selected = [i, j];
         }
 
         this.setState({
-            layout: layout,
+            // layout: layout,
             selectedType: selectedType,
             selected: selected,
-            mouseDownPos: [ev.clientX, ev.clientY]
+            mouseDownPos: [ev.clientX, ev.clientY],
+            addingEntities: addingEntities,
+            removingEntities: removingEntities
         });
     }
 
@@ -213,7 +232,10 @@ class App extends React.Component {
             });
         }
 
-        this.addingEntities = false;
+        this.setState({
+            addingEntities: false,
+            removingEntities: false
+        });
 
 
     }
@@ -255,9 +277,9 @@ class App extends React.Component {
 
     addSelectedEntityAt(i, j) {
 
-        console.log(this.addingEntities);
+        // console.log(this.addingEntities);
 
-        if (!this.addingEntities) return;
+        // if (!this.addingEntities) return;
 
         let currNodeType = this.state.layout[i][j].type;
         console.log(currNodeType);
@@ -273,6 +295,27 @@ class App extends React.Component {
             this.setState({
                 layout: layout
             })
+        }
+    }
+
+    removeEntityAt(row, col) {
+
+        let currNodeType = this.state.layout[row][col].type;
+
+        console.log(currNodeType);
+
+        if (currNodeType !== NORMAL && currNodeType !== GOAL
+            && currNodeType !== START) {
+
+            let layout = this.state.layout.slice()
+            layout[row] = layout[row].slice();
+
+            layout[row][col] = Object.assign({}, layout[row][col],
+                {type: NORMAL});
+
+            this.setState({
+                layout: layout
+            });
         }
     }
 
@@ -377,6 +420,17 @@ class App extends React.Component {
 
 
     render() {
+
+        let addOrRemove = null;
+
+        if (this.state.addingEntities) {
+            addOrRemove = this.addSelectedEntityAt
+        }
+
+        else if (this.state.removingEntities) {
+            addOrRemove = this.removeEntityAt
+        }
+
         return (
           <div id={"main"}>
             <Menu
@@ -392,6 +446,7 @@ class App extends React.Component {
                 handleMouseUp={this.handleMouseUp}
                 setDraggedOverNode={this.setDraggedOverNode}
                 addSelectedEntity={this.addSelectedEntityAt}
+                addOrRemove={addOrRemove}
                 layout={this.state.layout}
                 draggedOver={this.state.draggedOver}
                 selected={this.state.selected}

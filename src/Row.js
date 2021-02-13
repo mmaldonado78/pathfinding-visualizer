@@ -35,6 +35,7 @@ class Row extends React.PureComponent {
                             // onMouseMove={this.handleMouseMove}
                             onMouseDown={this.props.onMouseDown}
                             addSelectedEntity={this.props.addSelectedEntity}
+                            addOrRemove={this.props.addOrRemove}
                             onMouseUp={this.props.onMouseUp}
                         />
                     )

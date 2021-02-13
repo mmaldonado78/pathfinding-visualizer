@@ -5,7 +5,6 @@ class Node extends React.PureComponent {
 
     constructor(props) {
         super(props);
-        // this.fill = ;
         this.rect = React.createRef();
 
         this.state = {
@@ -23,7 +22,10 @@ class Node extends React.PureComponent {
     }
 
     handleMouseOver() {
-        this.props.addSelectedEntity(this.props.row, this.props.col);
+
+        if (this.props.addOrRemove) {
+            this.props.addOrRemove(this.props.row, this.props.col);
+        }
         this.handleHover();
     }
 
@@ -34,9 +36,6 @@ class Node extends React.PureComponent {
     }
 
     mouseDown(ev) {
-        console.log("Node 'this'");
-        console.log(this);
-        console.log(arguments)
         let row = this.props.row;
         let col = this.props.col;
         this.props.onMouseDown(row, col, ev);

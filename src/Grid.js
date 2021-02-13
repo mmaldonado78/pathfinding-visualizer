@@ -64,7 +64,7 @@ class Grid extends React.Component {
 
     handleMouseMove(ev) {
 
-        if (!(this.props.selectedType && this.props.selectedType !== NORMAL)) return;
+        if (!(this.props.selected)) return;
 
         if (this.LOG_MOUSEMOVE) {
             console.log("Mousemove");
@@ -140,6 +140,7 @@ class Grid extends React.Component {
                     draggedOver={this.props.draggedOver}
                     selected={this.props.selected}
                     addSelectedEntity={this.props.addSelectedEntity}
+                    addOrRemove={this.props.addOrRemove}
                 />);
         });
 
@@ -155,7 +156,7 @@ class Grid extends React.Component {
                 }
             </g>
             <g style={{pointerEvents: "none"}}>
-              {this.props.selectedType && this.props.selectedType !== NORMAL && this.renderDraggedNode()}
+              {this.props.selected && this.props.selectedType && this.props.selectedType !== NORMAL && this.renderDraggedNode()}
             </g>
           </svg>
 
