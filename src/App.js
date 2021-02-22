@@ -196,7 +196,7 @@ class App extends React.Component {
 
             let i, j;
 
-            if (row && col) {
+            if (row !== null && col !== null) {
                 [i, j] = [row, col];
             }
             else {
