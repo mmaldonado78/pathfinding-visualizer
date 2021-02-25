@@ -1,4 +1,5 @@
 import INeighbor from "./INeighbor";
+import GraphNode from "./GraphNode";
 
 /**
  * Translates a representation of a graph or grid structure into a graph.
@@ -7,10 +8,13 @@ interface Graph {
 
     /**
      * Returns all neighbors of a graph node, including impassible obstacles.
-     * @param row of Node
-     * @param col of Node
+     * @param nodeIdentifier unique identifier of a node
      */
-    getNeighbors(row: number, col: number): INeighbor[];
+    getNeighbors(...nodeIdentifier: any[]): INeighbor[];
+
+    isGoal(...nodeIdentifier: any[]): boolean;
+
+    getStart(): GraphNode;
 
 }
 

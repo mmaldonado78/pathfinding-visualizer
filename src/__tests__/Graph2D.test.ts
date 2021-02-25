@@ -1,37 +1,52 @@
 import Graph2D from "../visualization/Graph2D";
 import {START, NORMAL, OBSTACLE, LO_WEIGHT, MED_WEIGHT, HI_WEIGHT} from "../constants/NodeTypes";
-import INeighbor from "../interfaces/INeighbor";
+import GraphNode2D from "../algorithms/GraphNode2D";
+import Neighbor2D from "../visualization/Neighbor2D";
 
-const layout: {type: string}[][] = [
+const layout: Layout = [
     [{type: START}, {type: NORMAL}, {type: MED_WEIGHT}],
     [{type: OBSTACLE}, {type: NORMAL}, {type: OBSTACLE}],
     [{type: LO_WEIGHT}, {type: HI_WEIGHT}, {type: NORMAL}]
 ]
 
-const graph2D = new Graph2D(layout);
+const graph2D = new Graph2D(layout, [0, 0]);
+const sortNodes = (nodeA: Neighbor2D, nodeB: Neighbor2D) => {
+
+    if (nodeA.cost - nodeB.cost !== 0 &&
+        !(nodeA.cost === Number.POSITIVE_INFINITY && nodeB.cost === Number.POSITIVE_INFINITY)) {
+        return nodeA.cost - nodeB.cost;
+    }
+    else if (nodeA.row - nodeB.row !== 0){
+        return nodeA.row - nodeB.row;
+    }
+    else {
+        return nodeA.col - nodeB.col;
+    }
+}
 
 test('Graph2D gets only valid neighbors', () => {
-    const res: INeighbor[] = [
-        {encoding: "0-1", cost: 1}, {encoding: "1-0", cost: Number.POSITIVE_INFINITY},
-        {encoding: "1-1", cost: 1.4}
-    ]
+    const res: Neighbor2D[] = [
+        {row: 0, col: 1, cost: 1}, {row: 1, col:0, cost: Number.POSITIVE_INFINITY},
+        {row: 1, col:1, cost: 1.4}
+        ].map(({row, col, cost}) =>  {
+            return {row, col, cost, encoding: `${row}-${col}`}
+        });
 
-    res.forEach((neighbor: INeighbor) => {
-        expect(graph2D.getNeighbors(0, 0)).toContainEqual(neighbor);
-    })
+    expect(graph2D.getNeighbors([0, 0]).sort(sortNodes))
+        .toEqual(res.sort(sortNodes));
+
 })
 
 test("Graph2D gets all neighbors", () => {
-    const res = [
-        {encoding: "0-0", cost: 1.4}, {encoding: "0-1", cost: 1}, {encoding: "0-2", cost: 10 * 1.4},
-        {encoding: "1-0", cost: Number.POSITIVE_INFINITY}, {encoding: "1-2", cost: Number.POSITIVE_INFINITY},
-        {encoding: "2-0", cost: 5 * 1.4}, {encoding: "2-1", cost: 15}, {encoding: "2-2", cost: 1.4}
-    ]
+    const res: Neighbor2D[] = [
+        {row: 0, col: 0, cost: 1.4}, {row: 0, col: 1, cost: 1}, {row: 0, col: 2, cost: 10 * 1.4},
+        {row: 1, col: 0, cost: Number.POSITIVE_INFINITY}, {row: 1, col: 2, cost: Number.POSITIVE_INFINITY},
+        {row: 2, col: 0, cost: 5 * 1.4}, {row: 2, col: 1, cost: 15}, {row: 2, col: 2, cost: 1.4}
+    ].map(({row, col, cost}) =>  {
+        return {row, col, cost, encoding: `${row}-${col}`}
+    });
 
-    const neighbors: INeighbor[] = graph2D.getNeighbors(1, 1);
-
-    expect(neighbors.length).toBe(8);
-    res.forEach((neighbor: INeighbor) => {
-        expect(neighbors).toContainEqual(neighbor);
-    })
+    expect(graph2D.getNeighbors([1, 1]).sort(sortNodes))
+        .toEqual(res.sort(sortNodes));
 });
+

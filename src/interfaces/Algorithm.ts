@@ -4,9 +4,14 @@ import Heuristic from "./Heuristic";
 
 interface Algorithm {
 
-    step(): Array<Array<IProcessedNode>>;
-    constructPath(): Array<Array<number>>;
+    /**
+     * Performs one operation of an algorithm.
+     */
+
+    step(): IProcessedNode[][];
+    constructPath(): any[];
     initialize(graph: Graph, heuristic?: Heuristic): void;
+    goalFound(): boolean;
     reset(): void;
 
 }
