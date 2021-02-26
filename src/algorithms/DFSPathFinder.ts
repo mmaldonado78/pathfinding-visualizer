@@ -4,17 +4,19 @@ import Neighbor2D from "../visualization/Neighbor2D";
 import GraphNode2D from "./GraphNode2D";
 import Graph2D from "../visualization/Graph2D";
 import NodeState from "../constants/NodeState";
+import INeighbor from "../interfaces/INeighbor";
+import IProcessedNode from "../interfaces/IProcessedNode";
 
 class DFSPathFinder implements Algorithm {
 
-    private stack: Neighbor2D[];
+    private stack: INeighbor[];
     private backPointers: Map<GraphNode2D, GraphNode2D | null>;
     private graph: Graph2D | null;
     private fringedNodes: Map<string, GraphNode2D>;
     private visitedNodes: Map<string, GraphNode2D>;
     private foundGoal: boolean;
 
-    constructor(stack: Neighbor2D[]) {
+    constructor(stack: INeighbor[]) {
         this.stack = stack;
         this.backPointers = new Map<GraphNode2D, GraphNode2D | null>();
         this.graph = null;
@@ -23,11 +25,11 @@ class DFSPathFinder implements Algorithm {
         this.foundGoal = false;
     }
 
-    step(): ProcessedNode2D[][] {
+    step(): IProcessedNode[][] {
 
-        let visited: ProcessedNode2D[] = [];
-        let fringed: ProcessedNode2D[] = [];
-        let visitedObtsalces: ProcessedNode2D[] = [];
+        let visited: IProcessedNode[] = [];
+        let fringed: IProcessedNode[] = [];
+        let visitedObtsalces: IProcessedNode[] = [];
 
         if (this.graph === null) {
             throw Error("Algorithm not correctly initialized");
@@ -37,31 +39,30 @@ class DFSPathFinder implements Algorithm {
             return [];
         }
 
-        const {encoding}: Neighbor2D = this.stack.pop() as Neighbor2D;
+        const {encoding}: INeighbor = this.stack.pop() as INeighbor;
         const currNode: GraphNode2D = this.fringedNodes.get(encoding) as GraphNode2D;
         this.fringedNodes.delete(encoding);
 
         this.visitedNodes.set(encoding, currNode);
         visited.push({
-            row: currNode.row,
-            col: currNode.col,
+            node: [currNode.row, currNode.col],
             state: NodeState.VISITED
         });
 
         if (!this.graph.isGoal([currNode.row, currNode.col])) {
 
-            const notVisitedNeighbors: Neighbor2D[] = this.graph.getNeighbors([currNode.row, currNode.col])
-                .filter(({encoding}: Neighbor2D) =>
+            const notVisitedNeighbors: INeighbor[] = this.graph.getNeighbors([currNode.row, currNode.col])
+                .filter(({encoding}: INeighbor) =>
                     !this.fringedNodes.has(encoding) && !this.visitedNodes.has(encoding)
                 );
 
             notVisitedNeighbors.forEach((neighbor) => {
-                const {encoding, row, col, cost} = neighbor;
+                const {encoding, node, cost} = neighbor;
+                const [row, col] = node;
 
                 if (cost === Number.POSITIVE_INFINITY) {
                     visitedObtsalces.push({
-                        row: row,
-                        col: col,
+                        node: node,
                         state: NodeState.VISITED_OBSTACLE
                     })
 
@@ -74,19 +75,20 @@ class DFSPathFinder implements Algorithm {
 
                 else {
 
-                    this.fringedNodes.set(encoding, {
+                    const neighborNode: GraphNode2D = {
                         row: row,
                         col: col,
                         cost: cost + currNode.cost
-                    });
+                    }
 
+                    this.stack.push(neighbor);
+                    this.fringedNodes.set(encoding, neighborNode);
                     fringed.push({
-                        row: row,
-                        col: col,
+                        node: node,
                         state: NodeState.FRINGED
                     })
 
-                    this.backPointers.set(neighbor, currNode);
+                    this.backPointers.set(neighborNode, currNode);
                 }
             })
         }
@@ -99,7 +101,28 @@ class DFSPathFinder implements Algorithm {
     }
 
     constructPath(): Index2D[] {
-        return [];
+        if (this.graph === null) {
+            throw Error("Algorithm not initialized correctly");
+        }
+
+
+        let path: Index2D[] = [];
+
+        const goalNode: INeighbor = this.graph.getGoal();
+        if (!this.visitedNodes.has(goalNode.encoding)) {
+            console.log("Goal node was not found.");
+            return [];
+        }
+
+        let currParent: GraphNode2D | null = this.visitedNodes.get(goalNode.encoding) as GraphNode2D;
+
+        path.push([currParent.row, currParent.col]);
+
+        while (currParent !== null) {
+            currParent = this.backPointers.get(currParent) as GraphNode2D;
+        }
+
+        return path;
     }
 
     initialize(graph: Graph2D) {
@@ -110,9 +133,11 @@ class DFSPathFinder implements Algorithm {
         this.visitedNodes.clear();
         this.foundGoal = false;
 
-        const start: Neighbor2D = this.graph.getStart();
-        const {encoding, cost, row, col} = start;
+        const start: INeighbor = this.graph.getStart();
+        const {encoding, cost, node} = start;
         this.stack.push(start);
+
+        const [row, col] = node;
         const startNode: GraphNode2D = {
             row: row,
             col: col,

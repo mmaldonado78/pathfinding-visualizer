@@ -9,7 +9,7 @@ interface Algorithm {
      */
 
     step(): IProcessedNode[][];
-    constructPath(): any[];
+    constructPath(): NodeIdentifier[];
     initialize(graph: Graph, heuristic?: Heuristic): void;
     goalFound(): boolean;
     reset(): void;

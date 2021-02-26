@@ -5,6 +5,7 @@ import NodeState from "../constants/NodeState";
  */
 interface IProcessedNode {
     state: NodeState;
+    node: NodeIdentifier;
 }
 
 export default IProcessedNode;

@@ -10,9 +10,9 @@ interface Graph {
      * Returns all neighbors of a graph node, including impassible obstacles.
      * @param nodeIdentifier unique identifier of a node
      */
-    getNeighbors(...nodeIdentifier: any[]): INeighbor[];
+    getNeighbors(nodeIdentifier: NodeIdentifier): INeighbor[];
 
-    isGoal(...nodeIdentifier: any[]): boolean;
+    isGoal(nodeIdentifier: NodeIdentifier): boolean;
 
     getStart(): GraphNode;
 

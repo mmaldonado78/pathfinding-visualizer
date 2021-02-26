@@ -2,22 +2,25 @@ import Graph from "../interfaces/Graph";
 import {HI_WEIGHT, LO_WEIGHT, MED_WEIGHT, NORMAL, OBSTACLE, GOAL} from "../constants/NodeTypes";
 import Neighbor2D from "./Neighbor2D";
 import GraphNode2D from "../algorithms/GraphNode2D";
+import INeighbor from "../interfaces/INeighbor";
 
 class Graph2D implements Graph {
 
     private layout: Array<Array<{type: string}>>;
     private start: Index2D;
-    private rows: number
+    private goal: Index2D;
+    private rows: number;
     private cols: number;
 
-    constructor(layout: Layout, start: Index2D) {
+    constructor(layout: Layout, start: Index2D, goal: Index2D) {
         this.layout = layout;
         this.rows = layout.length;
         this.cols = layout[0].length;
         this.start = start;
+        this.goal = goal;
     }
 
-    getNeighbors(nodeIndex: Index2D): Neighbor2D[] {
+    getNeighbors(nodeIndex: Index2D): INeighbor[] {
         const [row, col]: Index2D = nodeIndex;
         let candidates: Index2D[] = [
             [row + 1, col + 1], [row + 1, col], [row + 1, col - 1],
@@ -37,8 +40,7 @@ class Graph2D implements Graph {
             return {
                 encoding: `${cand_row}-${cand_col}`,
                 cost: this.assignCost(neighborType, isDiagonal),
-                row: cand_row,
-                col: cand_col
+                node: [cand_row, cand_col]
             };
         });
     }
@@ -48,14 +50,22 @@ class Graph2D implements Graph {
         return this.layout[row][col].type === GOAL;
     }
 
-    getStart(): Neighbor2D {
+    getStart(): INeighbor {
         const [s_row, s_col] = this.start;
         return {
             encoding: `${s_row}-${s_col}`,
             cost: 0,
-            row: s_row,
-            col: s_col
+            node: [s_row, s_col]
         };
+    }
+
+    getGoal(): INeighbor {
+        const [g_row, g_col] = this.goal;
+        return {
+            encoding: `${g_row}-${g_col}`,
+            cost: this.assignCost(this.layout[g_row][g_col].type, false),
+            node: this.goal
+        }
     }
 
     private assignCost(neighborType: string, isDiagonal: boolean): number {
