@@ -1,5 +1,4 @@
 import React from 'react';
-import logo from './logo.svg';
 import './App.css';
 import Grid from './Grid.js'
 import Menu from './Menu.js'
@@ -11,6 +10,7 @@ import {CONFIG, ENTITY_SELECTOR} from "./constants/Submenus";
 import {A_STAR, NO_WEIGHTS} from "./constants/Algorithms";
 import {EUCLIDEAN} from "./constants/Heuristics";
 import {WEIGHTS} from "./constants/EntityNames";
+import VisualizationController from "./visualization/VisualizationController";
 
 const clone =  require('rfdc')();
 
@@ -88,6 +88,11 @@ class App extends React.Component {
         this.updateUserOptions = this.updateUserOptions.bind(this);
         this.renderEntitySelector = this.renderEntitySelector.bind(this);
         this.renderConfigMenu = this.renderConfigMenu.bind(this);
+        this.updateVisualizationFrame = this.updateVisualizationFrame.bind(this);
+        this.initializeVisualization = this.initializeVisualization.bind(this);
+        this.runAlgorithm = this.runAlgorithm.bind(this);
+
+        this.visualizationController = new VisualizationController(this.updateVisualizationFrame);
 
         this.submenuComponents = new Map(
             [
@@ -319,6 +324,31 @@ class App extends React.Component {
         }
     }
 
+    updateVisualizationFrame(frameData) {
+        let layout = this.state.layout.map(row => {
+            return row.slice();
+        });
+
+        frameData.forEach(({row, col, type}) => {
+            layout[row][col] = Object.assign({}, layout[row][col], {type: type});
+        })
+
+        this.setState({
+            layout: layout
+        });
+    }
+
+    initializeVisualization() {
+        this.visualizationController.initialize(
+            this.state.layout, this.startNode, this.goalNode,
+            "Depth First Search")
+    }
+
+    runAlgorithm() {
+        this.initializeVisualization();
+        this.visualizationController.run();
+    }
+
     // #####################################################################
     // #                    * Menu Actions *                               #
     // #####################################################################
@@ -436,6 +466,8 @@ class App extends React.Component {
             <Menu
                 clearGridObstacles={this.clearGridObstacles}
                 handleSubmenuChange={this.handleSubmenuChange}
+                runAlgorithm={this.runAlgorithm}
+
             />
             <div className={"editable-container"}>
               <Grid

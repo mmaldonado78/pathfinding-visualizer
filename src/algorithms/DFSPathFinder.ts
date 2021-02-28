@@ -1,6 +1,4 @@
 import Algorithm from "../interfaces/Algorithm";
-import ProcessedNode2D from "./ProcessedNode2D";
-import Neighbor2D from "../visualization/Neighbor2D";
 import GraphNode2D from "./GraphNode2D";
 import Graph2D from "../visualization/Graph2D";
 import NodeState from "../constants/NodeState";
@@ -35,7 +33,7 @@ class DFSPathFinder implements Algorithm {
             throw Error("Algorithm not correctly initialized");
         }
 
-        if (this.stack.length === 0) {
+        if (this.stack.length === 0 || this.foundGoal) {
             return [];
         }
 
@@ -116,13 +114,12 @@ class DFSPathFinder implements Algorithm {
 
         let currParent: GraphNode2D | null = this.visitedNodes.get(goalNode.encoding) as GraphNode2D;
 
-        path.push([currParent.row, currParent.col]);
-
         while (currParent !== null) {
+            path.push([currParent.row, currParent.col]);
             currParent = this.backPointers.get(currParent) as GraphNode2D;
         }
 
-        return path;
+        return path.reverse();
     }
 
     initialize(graph: Graph2D) {

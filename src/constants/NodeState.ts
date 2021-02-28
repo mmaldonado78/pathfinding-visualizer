@@ -1,4 +1,4 @@
-const enum NodeState {
+enum NodeState {
     VISITED,
     VISITED_OBSTACLE,
     FRINGED

@@ -20,7 +20,7 @@ class AlgorithmRunner {
         let frameData: AlgorithmPayload[][][] = [];
 
         let currStep: IProcessedNode[][] = algorithm.step();
-        while (!(algorithm.goalFound() || currStep.length === 0)) {
+        while (currStep.length !== 0) {
             frameData.push(
 
                 // mapping a processed node state to its corresponding color
@@ -52,7 +52,7 @@ class AlgorithmRunner {
                         type: PATH
                     }
                 ]
-            }))
+            }));
         }
         return frameData;
     }

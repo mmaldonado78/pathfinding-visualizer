@@ -12,7 +12,9 @@ class Menu extends React.Component {
     render() {
         return(
             <div id={"menu"}>
-                <MenuItem itemName={"Run"}/>
+                <MenuItem itemName={"Run"}
+                          action={this.props.runAlgorithm}
+                />
                 <MenuItem itemName={"Step Forward"}/>
                 <MenuItem itemName={"Step Backward"}/>
                 <MenuItem itemName={ENTITY_SELECTOR}
