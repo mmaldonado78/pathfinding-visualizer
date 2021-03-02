@@ -2,6 +2,7 @@ import React from "react";
 import './Menu.css';
 import MenuItem from "./MenuItem";
 import {CONFIG, ENTITY_SELECTOR} from "./constants/Submenus";
+import PlaybackController from "./PlaybackController";
 
 class Menu extends React.Component {
 
@@ -12,8 +13,11 @@ class Menu extends React.Component {
     render() {
         return(
             <div id={"menu"}>
-                <MenuItem itemName={"Run"}
-                          action={this.props.runAlgorithm}
+                <PlaybackController
+                    running={this.props.runningAlgorithm}
+                    runAlgorithm={this.props.runAlgorithm}
+                    pauseAlgorithm={this.props.pauseAlgorithm}
+                    playBackControlEnabled={this.props.playBackControlEnabled}
                 />
                 <MenuItem itemName={"Step Forward"}/>
                 <MenuItem itemName={"Step Backward"}/>
@@ -28,7 +32,7 @@ class Menu extends React.Component {
                 />
                 <MenuItem
                     action={this.props.clearGridObstacles}
-                    itemName={"Clear Obstacles"}
+                    itemName={"Remove Terrain"}
                 />
             </div>
         )

@@ -18,7 +18,10 @@ class MenuItem extends React.Component {
     render() {
         return (
             <div id={"menu-item"}>
-                <button className={"menu-button"} onClick={this.performAction}>
+                <button className={"menu-button"}
+                        onClick={this.performAction}
+                        disabled={this.props.disabled}
+                >
                     {this.props.itemName}
                 </button>
             </div>

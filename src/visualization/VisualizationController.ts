@@ -14,6 +14,9 @@ class VisualizationController {
     private algorithmRunner: AlgorithmRunner;
     private currentFrame: number;
     private stepTimer: NodeJS.Timeout | null;
+    private paused: boolean;
+
+    private currSubstep: Promise<void>;
 
     constructor(updateViewCallback: Function) {
         this.updateView = updateViewCallback;
@@ -24,6 +27,8 @@ class VisualizationController {
         this.algorithmRunner = new AlgorithmRunner();
         this.currentFrame = 0;
         this.stepTimer = null;
+        this.currSubstep = Promise.resolve();
+        this.paused = false;
 
         this.runSteps = this.runSteps.bind(this);
         this.runSubsteps = this.runSubsteps.bind(this);
@@ -52,12 +57,7 @@ class VisualizationController {
             const algorithm: Algorithm = this.algorithms[algorithmName];
             algorithm.initialize(graph);
             this.frameData = this.frameData.concat(this.algorithmRunner.getAlgorithmFrameData(algorithm));
-            console.log("Frame data");
-            console.log(this.frameData);
             this.currentFrame = 0;
-
-
-
 
         }
 
@@ -68,6 +68,7 @@ class VisualizationController {
         if (this.currentFrame >= this.frameData.length) {
             this.currentFrame = 0;
         }
+        this.paused = false;
 
         this.runSteps();
 
@@ -77,9 +78,18 @@ class VisualizationController {
 
         const _this: VisualizationController = this;
         this.stepTimer = setTimeout(async function callRunSubsteps() {
-            await _this.runSubsteps(0, _this.frameData[_this.currentFrame].length);
-            _this.currentFrame++;
-            if (_this.currentFrame < _this.frameData.length) {
+            console.log("Current frame:", _this.currentFrame);
+
+            // avoid running another step if we pause right after the check if we
+            // should run another step
+            if (!_this.paused) {
+                _this.currSubstep = _this.runSubsteps(0, _this.frameData[_this.currentFrame].length);
+                await _this.currSubstep;
+
+                _this.currentFrame++;
+            }
+
+            if (_this.currentFrame < _this.frameData.length && !_this.paused) {
                 _this.stepTimer = setTimeout(callRunSubsteps, 15)
             }
 
@@ -92,10 +102,12 @@ class VisualizationController {
         return new Promise((resolve, reject) => {
             const _this: VisualizationController = this;
             setTimeout(function update(substep: number = 0){
+                console.log("\tCurr Frame Inside: ", _this.currentFrame);
+                console.log("\tCurr Substep Inside", substep);
                 _this.updateView(_this.frameData[_this.currentFrame][substep]);
 
                 substep++;
-                console.log("Current Substep:", substep);
+                // console.log("Current Substep:", substep);
 
                 if (substep < numSubsteps) {
                     setTimeout(update, 10, substep);
@@ -109,19 +121,13 @@ class VisualizationController {
 
     }
 
-    pause() {
-        if (this.stepTimer !== null) {
-            clearTimeout(this.stepTimer);
-        }
-    }
+    pause(): Promise<void> {
 
-    runSubstep(currSubstep: number, numSubsteps: number, resolve: Function) {
-        this.updateView(this.frameData[this.currentFrame][currSubstep])
+        return this.currSubstep.then(() => {
+            this.paused = true;
+            // return Promise.resolve();
+        })
 
-        currSubstep++;
-        if (currSubstep < numSubsteps) {
-            // setTimeout()
-        }
     }
 
     clearFrameData() {

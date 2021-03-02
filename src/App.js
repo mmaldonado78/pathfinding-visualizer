@@ -25,7 +25,7 @@ class App extends React.Component {
     LOG_MOUSEDOWN = false;
     LOG_MOUSEMOVE = false;
     LOG_MOUSEOUT = false;
-    LOG_MOUSEUP = true;
+    LOG_MOUSEUP = false;
 
     // ================================
 
@@ -70,7 +70,10 @@ class App extends React.Component {
             currentSubmenu: null,
 
             addingEntities: false,
-            removingEntities: false
+            removingEntities: false,
+
+            runningAlgorithm: false,
+            playBackControlEnabled: true
 
         };
 
@@ -88,9 +91,11 @@ class App extends React.Component {
         this.updateUserOptions = this.updateUserOptions.bind(this);
         this.renderEntitySelector = this.renderEntitySelector.bind(this);
         this.renderConfigMenu = this.renderConfigMenu.bind(this);
+
         this.updateVisualizationFrame = this.updateVisualizationFrame.bind(this);
         this.initializeVisualization = this.initializeVisualization.bind(this);
         this.runAlgorithm = this.runAlgorithm.bind(this);
+        this.pauseAlgorithm = this.pauseAlgorithm.bind(this);
 
         this.visualizationController = new VisualizationController(this.updateVisualizationFrame);
 
@@ -345,9 +350,26 @@ class App extends React.Component {
     }
 
     runAlgorithm() {
+        this.setState({
+            runningAlgorithm: true
+        });
         this.initializeVisualization();
         this.visualizationController.run();
     }
+
+    async pauseAlgorithm() {
+
+        this.setState( {
+            runningAlgorithm: false,
+            playBackControlEnabled: false,
+        });
+        await this.visualizationController.pause();
+        this.setState({
+            playBackControlEnabled: true
+        });
+    }
+
+    // disablePlayBackControl() {}
 
     // #####################################################################
     // #                    * Menu Actions *                               #
@@ -467,6 +489,9 @@ class App extends React.Component {
                 clearGridObstacles={this.clearGridObstacles}
                 handleSubmenuChange={this.handleSubmenuChange}
                 runAlgorithm={this.runAlgorithm}
+                pauseAlgorithm={this.pauseAlgorithm}
+                runningAlgorithm={this.state.runningAlgorithm}
+                playBackControlEnabled={this.state.playBackControlEnabled}
 
             />
             <div className={"editable-container"}>
