@@ -19,7 +19,13 @@ class Menu extends React.Component {
                     pauseAlgorithm={this.props.pauseAlgorithm}
                     playBackControlEnabled={this.props.playBackControlEnabled}
                 />
-                <MenuItem itemName={"Step Forward"}/>
+                <MenuItem itemName={"Step Forward"}
+                          action={this.props.stepForward}
+                          disabled={
+                              !this.props.playBackControlEnabled ||
+                              !this.props.stepsEnabled
+                          }
+                />
                 <MenuItem itemName={"Step Backward"}/>
                 <MenuItem itemName={ENTITY_SELECTOR}
                           actionArgs={[ENTITY_SELECTOR]}

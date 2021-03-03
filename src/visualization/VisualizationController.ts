@@ -32,6 +32,7 @@ class VisualizationController {
 
         this.runSteps = this.runSteps.bind(this);
         this.runSubsteps = this.runSubsteps.bind(this);
+        this.runStep = this.runStep.bind(this);
     }
 
     initialize(layout: Layout, start: NodeIdentifier, goal: NodeIdentifier,
@@ -39,10 +40,9 @@ class VisualizationController {
 
         if (this.frameData.length === 0) {
 
-            this.frameData.push([
-                layout.reduce(
-                    (accumulator: AlgorithmPayload[] , row, rowNum ) => {
-                        return accumulator.concat(
+            const baseFrameData = layout.reduce(
+                    (substep: AlgorithmPayload[] , row, rowNum ) => {
+                        return substep.concat(
                             row.map((nodeData, colNum) => {
                                 return {
                                     row: rowNum,
@@ -50,14 +50,13 @@ class VisualizationController {
                                     type: nodeData.type
                                 }
                             })
-                        )}, [])
-            ]);
+                        )}, []);
             const graph: Graph2D = new Graph2D(layout, start, goal);
 
             const algorithm: Algorithm = this.algorithms[algorithmName];
             algorithm.initialize(graph);
-            this.frameData = this.frameData.concat(this.algorithmRunner.getAlgorithmFrameData(algorithm));
-            this.currentFrame = 0;
+            this.frameData = [[baseFrameData], ...this.algorithmRunner.getAlgorithmFrameData(algorithm)];
+            this.currentFrame = 1;
 
         }
 
@@ -74,7 +73,7 @@ class VisualizationController {
 
     }
 
-    runSteps(startFrame: number = 0) {
+    private runSteps(startFrame: number = 0) {
 
         const _this: VisualizationController = this;
         this.stepTimer = setTimeout(async function callRunSubsteps() {
@@ -96,18 +95,15 @@ class VisualizationController {
         }, 15);
     }
 
-    runSubsteps(currSubstsep: number, numSubsteps: number): Promise<void> {
+    private runSubsteps(currSubstsep: number, numSubsteps: number): Promise<void> {
 
 
         return new Promise((resolve, reject) => {
             const _this: VisualizationController = this;
             setTimeout(function update(substep: number = 0){
-                console.log("\tCurr Frame Inside: ", _this.currentFrame);
-                console.log("\tCurr Substep Inside", substep);
-                _this.updateView(_this.frameData[_this.currentFrame][substep]);
 
+                _this.updateView(_this.frameData[_this.currentFrame][substep]);
                 substep++;
-                // console.log("Current Substep:", substep);
 
                 if (substep < numSubsteps) {
                     setTimeout(update, 10, substep);
@@ -121,13 +117,25 @@ class VisualizationController {
 
     }
 
+    /**
+     * Returns a promise that resolves after the current step has
+     * finished displaying all of its substeps.
+     */
     pause(): Promise<void> {
 
         return this.currSubstep.then(() => {
             this.paused = true;
-            // return Promise.resolve();
         })
 
+    }
+
+    runStep(): Promise<void> {
+        if (this.currentFrame >= this.frameData.length) {
+            this.currentFrame = 0;
+        }
+
+        return this.runSubsteps(0, this.frameData[this.currentFrame].length)
+            .then(() => {this.currentFrame++});
     }
 
     clearFrameData() {

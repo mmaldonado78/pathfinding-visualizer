@@ -73,7 +73,8 @@ class App extends React.Component {
             removingEntities: false,
 
             runningAlgorithm: false,
-            playBackControlEnabled: true
+            playBackControlEnabled: true,
+            stepsEnabled: true
 
         };
 
@@ -96,6 +97,7 @@ class App extends React.Component {
         this.initializeVisualization = this.initializeVisualization.bind(this);
         this.runAlgorithm = this.runAlgorithm.bind(this);
         this.pauseAlgorithm = this.pauseAlgorithm.bind(this);
+        this.stepForward = this.stepForward.bind(this);
 
         this.visualizationController = new VisualizationController(this.updateVisualizationFrame);
 
@@ -351,7 +353,8 @@ class App extends React.Component {
 
     runAlgorithm() {
         this.setState({
-            runningAlgorithm: true
+            runningAlgorithm: true,
+            stepsEnabled: false
         });
         this.initializeVisualization();
         this.visualizationController.run();
@@ -365,11 +368,11 @@ class App extends React.Component {
         });
         await this.visualizationController.pause();
         this.setState({
-            playBackControlEnabled: true
+            playBackControlEnabled: true,
+            stepsEnabled: true
         });
     }
 
-    // disablePlayBackControl() {}
 
     // #####################################################################
     // #                    * Menu Actions *                               #
@@ -458,6 +461,19 @@ class App extends React.Component {
         );
     }
 
+    stepForward() {
+        this.setState({
+            playBackControlEnabled: false
+        })
+        this.visualizationController.initialize(
+            this.state.layout, this.startNode, this.goalNode, "Depth First Search"
+        );
+        this.visualizationController.runStep()
+            .then(() => this.setState({
+                playBackControlEnabled: true
+            }));
+    }
+
     // ########################################################################
     // #                       * Update User Options *                        #
     // ########################################################################
@@ -492,6 +508,8 @@ class App extends React.Component {
                 pauseAlgorithm={this.pauseAlgorithm}
                 runningAlgorithm={this.state.runningAlgorithm}
                 playBackControlEnabled={this.state.playBackControlEnabled}
+                stepsEnabled={this.state.stepsEnabled}
+                stepForward={this.stepForward}
 
             />
             <div className={"editable-container"}>
