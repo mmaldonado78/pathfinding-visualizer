@@ -31,6 +31,10 @@ class Menu extends React.Component {
                           actionArgs={[ENTITY_SELECTOR]}
                           action={this.props.handleSubmenuChange}
                 />
+                <MenuItem
+                    itemName={"End Visualiaztion"}
+                    action={this.props.endVisulization}
+                />
                 <MenuItem itemName={"Eraser"}/>
                 <MenuItem itemName={CONFIG}
                           actionArgs={[CONFIG]}

@@ -17,6 +17,7 @@ class VisualizationController {
     private paused: boolean;
 
     private currSubstep: Promise<void>;
+    private terminate: boolean;
 
     constructor(updateViewCallback: Function) {
         this.updateView = updateViewCallback;
@@ -29,6 +30,7 @@ class VisualizationController {
         this.stepTimer = null;
         this.currSubstep = Promise.resolve();
         this.paused = false;
+        this.terminate = false;
 
         this.runSteps = this.runSteps.bind(this);
         this.runSubsteps = this.runSubsteps.bind(this);
@@ -68,6 +70,7 @@ class VisualizationController {
             this.currentFrame = 0;
         }
         this.paused = false;
+        this.terminate = false;
 
         this.runSteps();
 
@@ -81,14 +84,15 @@ class VisualizationController {
 
             // avoid running another step if we pause right after the check if we
             // should run another step
-            if (!_this.paused) {
+            if (!_this.paused && !_this.terminate) {
                 _this.currSubstep = _this.runSubsteps(0, _this.frameData[_this.currentFrame].length);
                 await _this.currSubstep;
 
                 _this.currentFrame++;
             }
 
-            if (_this.currentFrame < _this.frameData.length && !_this.paused) {
+            if (_this.currentFrame < _this.frameData.length && !_this.paused
+                && !_this.terminate) {
                 _this.stepTimer = setTimeout(callRunSubsteps, 15)
             }
 
@@ -105,7 +109,7 @@ class VisualizationController {
                 _this.updateView(_this.frameData[_this.currentFrame][substep]);
                 substep++;
 
-                if (substep < numSubsteps) {
+                if (substep < numSubsteps && !_this.terminate) {
                     setTimeout(update, 10, substep);
                 }
                 else {
@@ -138,8 +142,15 @@ class VisualizationController {
             .then(() => {this.currentFrame++});
     }
 
-    clearFrameData() {
-        this.frameData = [];
+    endVisualization() {
+        this.terminate = true
+        return this.currSubstep.then(() => {
+            if (this.frameData.length > 0) {
+                this.updateView(this.frameData[0][0]);
+            }
+            this.frameData = [];
+        });
+
     }
 }
 

@@ -98,6 +98,7 @@ class App extends React.Component {
         this.runAlgorithm = this.runAlgorithm.bind(this);
         this.pauseAlgorithm = this.pauseAlgorithm.bind(this);
         this.stepForward = this.stepForward.bind(this);
+        this.endVisualization = this.endVisualization.bind(this);
 
         this.visualizationController = new VisualizationController(this.updateVisualizationFrame);
 
@@ -474,6 +475,10 @@ class App extends React.Component {
             }));
     }
 
+    endVisualization() {
+        this.visualizationController.endVisualization();
+    }
+
     // ########################################################################
     // #                       * Update User Options *                        #
     // ########################################################################
@@ -510,6 +515,7 @@ class App extends React.Component {
                 playBackControlEnabled={this.state.playBackControlEnabled}
                 stepsEnabled={this.state.stepsEnabled}
                 stepForward={this.stepForward}
+                endVisulization={this.endVisualization}
 
             />
             <div className={"editable-container"}>
