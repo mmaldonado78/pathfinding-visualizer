@@ -38,29 +38,29 @@ class VisualizationController {
     }
 
     initialize(layout: Layout, start: NodeIdentifier, goal: NodeIdentifier,
-               algorithmName: string, algOptions?: AlgorithmOptions) {
+               algorithmName: string, algOptions?: AlgorithmOptions): void {
 
-        if (this.frameData.length === 0) {
-
-            const baseFrameData = layout.reduce(
-                    (substep: AlgorithmPayload[] , row, rowNum ) => {
-                        return substep.concat(
-                            row.map((nodeData, colNum) => {
-                                return {
-                                    row: rowNum,
-                                    col: colNum,
-                                    type: nodeData.type
-                                }
-                            })
-                        )}, []);
-            const graph: Graph2D = new Graph2D(layout, start, goal);
-
-            const algorithm: Algorithm = this.algorithms[algorithmName];
-            algorithm.initialize(graph);
-            this.frameData = [[baseFrameData], ...this.algorithmRunner.getAlgorithmFrameData(algorithm)];
-            this.currentFrame = 1;
-
+        if (this.frameData.length > 0) {
+            return
         }
+
+        const baseFrameData = layout.reduce(
+                (substep: AlgorithmPayload[] , row, rowNum ) => {
+                    return substep.concat(
+                        row.map((nodeData, colNum) => {
+                            return {
+                                row: rowNum,
+                                col: colNum,
+                                type: nodeData.type
+                            }
+                        })
+                    )}, []);
+        const graph: Graph2D = new Graph2D(layout, start, goal);
+
+        const algorithm: Algorithm = this.algorithms[algorithmName];
+        algorithm.initialize(graph);
+        this.frameData = [[baseFrameData], ...this.algorithmRunner.getAlgorithmFrameData(algorithm)];
+        this.currentFrame = 1;
 
     }
 
